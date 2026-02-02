@@ -1,6 +1,9 @@
+using System.IO;
 using AFKJourneyBot.Common;
+using AFKJourneyBot.Core.Definitions;
 using AFKJourneyBot.Device;
 using AFKJourneyBot.Vision;
+using Serilog;
 
 namespace AFKJourneyBot.Core.Runtime;
 
@@ -10,6 +13,11 @@ namespace AFKJourneyBot.Core.Runtime;
 public sealed class BotApi : IBotApi
 {
     private static readonly TimeSpan DefaultPollInterval = TimeSpan.FromMilliseconds(500);
+    private static readonly TimeSpan PopupPostTapDelay = TimeSpan.FromMilliseconds(2000);
+    private static readonly string[] PopupTemplateNames =
+    [
+        // Add popup button templates here, e.g. "popup_close.png", "popup_ok.png"
+    ];
     private readonly IDeviceController _device;
     private readonly IVisionService _vision;
     private readonly IOcrService _ocr;
@@ -26,41 +34,41 @@ public sealed class BotApi : IBotApi
         _pauseGate = pauseGate;
     }
 
-    /// <inheritdoc />
-    public async Task<ScreenPoint?> FindTemplateAsync(string templatePath, CancellationToken ct, double threshold = 0.92)
-    {
-        await EnsureNotPausedAsync(ct);
-        var screen = await _device.ScreenshotAsync(ct);
-        return await _vision.FindTemplateAsync(screen, templatePath, threshold, ct);
-    }
 
     /// <inheritdoc />
     public async Task<ScreenPoint?> WaitForTemplateAsync(
-        string templatePath,
+        string relativeTemplatePath,
         CancellationToken ct,
         double threshold = 0.92,
         TimeSpan? timeout = null,
         TimeSpan? pollInterval = null)
     {
-        var interval = pollInterval ?? DefaultPollInterval;
+        pollInterval ??= DefaultPollInterval;
+        timeout ??= TimeSpan.FromSeconds(60);
         var start = DateTimeOffset.UtcNow;
 
         while (true)
         {
             await EnsureNotPausedAsync(ct);
             var screen = await _device.ScreenshotAsync(ct);
-            var point = await _vision.FindTemplateAsync(screen, templatePath, threshold, ct);
+            if (await TryHandlePopupAsync(screen, ct))
+            {
+                continue;
+            }
+            var point = await _vision.FindTemplateAsync(screen, TemplatePaths.For(relativeTemplatePath), threshold, ct);
             if (point != null)
             {
                 return point;
             }
 
-            if (timeout.HasValue && DateTimeOffset.UtcNow - start >= timeout.Value)
+            if (DateTimeOffset.UtcNow - start >= timeout.Value)
             {
+                // TODO: save the screenshot for debugging
+                Log.Error("Timed out while searching for template {TemplatePath}", relativeTemplatePath);
                 return null;
             }
 
-            await Task.Delay(interval, ct);
+            await Task.Delay(pollInterval.Value, ct);
         }
     }
 
@@ -70,11 +78,6 @@ public sealed class BotApi : IBotApi
         TimeSpan? timeout = null,
         TimeSpan? pollInterval = null)
     {
-        if (candidates == null || candidates.Count == 0)
-        {
-            throw new ArgumentException("At least one template must be provided.", nameof(candidates));
-        }
-
         var interval = pollInterval ?? DefaultPollInterval;
         var start = DateTimeOffset.UtcNow;
 
@@ -82,8 +85,12 @@ public sealed class BotApi : IBotApi
         {
             await EnsureNotPausedAsync(ct);
             var screen = await _device.ScreenshotAsync(ct);
+            if (await TryHandlePopupAsync(screen, ct))
+            {
+                continue;
+            }
 
-            foreach (var candidate in candidates)
+            foreach (var candidate in candidates.Select(c => c with { Path = TemplatePaths.For(c.Path) }))
             {
                 var point = await _vision.FindTemplateAsync(screen, candidate.Path, candidate.Threshold, ct);
                 if (point != null)
@@ -99,6 +106,31 @@ public sealed class BotApi : IBotApi
 
             await Task.Delay(interval, ct);
         }
+    }
+
+    private async Task<bool> TryHandlePopupAsync(ScreenFrame screen, CancellationToken ct)
+    {
+        foreach (var templateName in PopupTemplateNames)
+        {
+            var templatePath = TemplatePaths.For(templateName);
+            if (!File.Exists(templatePath))
+            {
+                Log.Warning("Could not find template {TemplatePath}", templatePath);
+                continue;
+            }
+
+            var point = await _vision.FindTemplateAsync(screen, templatePath, 0.92, ct);
+            if (point == null)
+            {
+                continue;
+            }
+
+            await RunDeviceActionAsync(() => _device.TapAsync(point.Value.X, point.Value.Y, ct), ct);
+            await Task.Delay(PopupPostTapDelay, ct);
+            return true;
+        }
+
+        return false;
     }
 
     public Task TapAsync(int x, int y, CancellationToken ct)
@@ -125,6 +157,11 @@ public sealed class BotApi : IBotApi
         await EnsureNotPausedAsync(ct);
         var screen = await _device.ScreenshotAsync(ct);
         return _vision.GetPixel(screen, x, y);
+    }
+
+    public async Task BackAsync(CancellationToken ct)
+    {
+        throw new NotImplementedException();
     }
 
     /// <summary>

@@ -1,5 +1,4 @@
 using AFKJourneyBot.Common;
-using AFKJourneyBot.Core.Definitions;
 using AFKJourneyBot.Core.Runtime;
 using Serilog;
 
@@ -29,7 +28,7 @@ public class PushSeasonAfkStages(IBotApi botApi) : IBotTask
         while (defeatsOnCurrentStage < AttemptsPerFormation * FormationsToTry)
         {
             var formationIndex = defeatsOnCurrentStage / AttemptsPerFormation;
-            var recordsButton = await botApi.WaitForTemplateAsync(TemplatePaths.For("records.png"), ct);
+            var recordsButton = await botApi.WaitForTemplateAsync("afk_stages/records.png", ct);
             if (formationIndex != previousFormationIndex)
             {
                 Log.Information("Copying Formation #{FormationNumber}", formationIndex + 1);
@@ -39,27 +38,27 @@ public class PushSeasonAfkStages(IBotApi botApi) : IBotTask
                 for (var i = 0; i < formationIndex; i++)
                 {
                     var nextFormationButton =
-                        await botApi.WaitForTemplateAsync(TemplatePaths.For("next_formation.png"), ct);
+                        await botApi.WaitForTemplateAsync("afk_stages/next_formation.png", ct);
                     await botApi.TapAsync(nextFormationButton!.Value, ct);
                 }
 
                 var copyFormationButton =
-                    await botApi.WaitForTemplateAsync(TemplatePaths.For("copy_formation.png"), ct);
+                    await botApi.WaitForTemplateAsync("afk_stages/copy_formation.png", ct);
                 await botApi.TapAsync(copyFormationButton!.Value, ct);
                 previousFormationIndex = formationIndex;
             }
 
             // Tap Battle
-            var battleButton = await botApi.WaitForTemplateAsync(TemplatePaths.For("start_battle.png"), ct);
+            var battleButton = await botApi.WaitForTemplateAsync("afk_stages/start_battle.png", ct);
             Log.Information("Starting Battle #{BattleAttemptNumber}", defeatsOnCurrentStage + 1);
             await botApi.TapAsync(battleButton!.Value, ct);
 
             // Poll for battle defeat or victory screen
             var match = await botApi.WaitForAnyTemplateAsync(
                 [
-                    new TemplateWait(TemplatePaths.For("next.png"), "victory"),
-                    new TemplateWait(TemplatePaths.For("rewards_increased.png"), "victory"),
-                    new TemplateWait(TemplatePaths.For("retry.png"), "defeat")
+                    new TemplateWait("afk_stages/next.png", "victory"),
+                    new TemplateWait("afk_stages/rewards_increased.png", "victory"),
+                    new TemplateWait("afk_stages/retry.png", "defeat")
                 ],
                 ct);
 

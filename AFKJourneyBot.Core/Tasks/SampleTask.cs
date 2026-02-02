@@ -1,5 +1,4 @@
 using AFKJourneyBot.Core.Runtime;
-using AFKJourneyBot.Core.Definitions;
 using Serilog;
 
 namespace AFKJourneyBot.Core.Tasks;
@@ -22,7 +21,7 @@ public class SampleTask : IBotTask
 
         while (!ct.IsCancellationRequested)
         {
-            var point = await _api.FindTemplateAsync(TemplatePaths.For("button.png"), ct: ct);
+            var point = await _api.WaitForTemplateAsync("button.png", ct);
 
             if (point != null)
             {

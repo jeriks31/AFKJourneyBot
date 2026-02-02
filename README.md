@@ -45,7 +45,7 @@ public sealed class DailyQuestTask : IBotTask
         Log.Information("Daily quest task started");
 
         var menu = await _api.WaitForTemplateAsync(
-            TemplatePaths.For("main_menu.png"),
+            "main_menu.png",
             timeout: TimeSpan.FromSeconds(10),
             ct: ct);
 
@@ -105,7 +105,7 @@ To keep Pause and Stop working correctly:
 **Tap a button if it appears**
 
 ```csharp
-var point = await _api.FindTemplateAsync(TemplatePaths.For("button.png"), ct: ct);
+var point = await _api.FindTemplateAsync("button.png", ct: ct);
 if (point != null)
 {
     await _api.TapAsync(point.Value, ct);
@@ -115,7 +115,7 @@ if (point != null)
 **Wait and tap**
 
 ```csharp
-var point = await _api.WaitForTemplateAsync(TemplatePaths.For("open.png"), ct: ct);
+var point = await _api.WaitForTemplateAsync("open.png", ct: ct);
 if (point != null)
 {
     await _api.TapAsync(point.Value, ct);
@@ -125,7 +125,7 @@ if (point != null)
 **Wait for a screen to appear**
 
 ```csharp
-var ok = await _api.WaitForTemplateAsync(TemplatePaths.For("screen_marker.png"), timeout: TimeSpan.FromSeconds(8), ct: ct);
+var ok = await _api.WaitForTemplateAsync("screen_marker.png", timeout: TimeSpan.FromSeconds(8), ct: ct);
 if (ok == null) return;
 ```
 

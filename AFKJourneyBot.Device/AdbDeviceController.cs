@@ -10,6 +10,7 @@ public interface IDeviceController
     Task TapAsync(int x, int y, CancellationToken ct);
     Task SwipeAsync(ScreenPoint start, ScreenPoint end, int durationMs, CancellationToken ct);
     Task InputTextAsync(string text, CancellationToken ct);
+    Task BackAsync(CancellationToken ct);
 }
 
 public sealed class AdbDeviceController : IDeviceController
@@ -43,6 +44,9 @@ public sealed class AdbDeviceController : IDeviceController
 
     public Task InputTextAsync(string text, CancellationToken ct)
         => RunAdbShellAsync($"input text {EscapeInputText(text)}", ct);
+
+    public Task BackAsync(CancellationToken ct)
+        => RunAdbShellAsync("input keyevent 4", ct);
 
     private string BuildArgs(string args)
         => string.IsNullOrWhiteSpace(_deviceSerial) ? args : $"-s {_deviceSerial} {args}";
