@@ -7,6 +7,7 @@ namespace AFKJourneyBot.Core.Runtime;
 /// </summary>
 public interface IBotApi
 {
+    Task<ScreenPoint?> FindTemplateAsync(string relativeTemplatePath, CancellationToken ct, double threshold = 0.92);
     /// <summary>
     /// Waits until a template is found or a timeout occurs. Accepts a relative template path.
     /// </summary>
@@ -41,6 +42,10 @@ public interface IBotApi
     /// </summary>
     Task InputTextAsync(string text, CancellationToken ct);
     /// <summary>
+    /// Presses the 'Back' button
+    /// </summary>
+    Task BackAsync(CancellationToken ct);
+    /// <summary>
     /// Reads OCR text from a rectangular region of the screen.
     /// </summary>
     Task<string> ReadTextAsync(ScreenRect roi, CancellationToken ct);
@@ -48,5 +53,4 @@ public interface IBotApi
     /// Gets the RGB color of a pixel.
     /// </summary>
     Task<RgbColor> GetPixelAsync(int x, int y, CancellationToken ct);
-    Task BackAsync(CancellationToken ct);
 }

@@ -1,4 +1,3 @@
-using System.IO;
 using AFKJourneyBot.Common;
 using AFKJourneyBot.Core.Definitions;
 using AFKJourneyBot.Device;
@@ -35,7 +34,13 @@ public sealed class BotApi : IBotApi
     }
 
 
-    /// <inheritdoc />
+    public async Task<ScreenPoint?> FindTemplateAsync(string relativeTemplatePath, CancellationToken ct, double threshold = 0.92)
+    {
+        await EnsureNotPausedAsync(ct);
+        var screen = await _device.ScreenshotAsync(ct);
+        return await _vision.FindTemplateAsync(screen, TemplatePaths.For(relativeTemplatePath), threshold, ct);
+    }
+
     public async Task<ScreenPoint?> WaitForTemplateAsync(
         string relativeTemplatePath,
         CancellationToken ct,
@@ -63,8 +68,10 @@ public sealed class BotApi : IBotApi
 
             if (DateTimeOffset.UtcNow - start >= timeout.Value)
             {
-                // TODO: save the screenshot for debugging
-                Log.Error("Timed out while searching for template {TemplatePath}", relativeTemplatePath);
+                var debugPath = await TrySaveDebugScreenshotAsync(screen, relativeTemplatePath, ct);
+                Log.Error(
+                    "Timed out while searching for template {TemplatePath}. There may be an unhandled popup. Debug image saved to {DebugImagePath}",
+                    relativeTemplatePath, debugPath ?? "COULD_NOT_SAVE_IMAGE");
                 return null;
             }
 
@@ -125,7 +132,7 @@ public sealed class BotApi : IBotApi
                 continue;
             }
 
-            await RunDeviceActionAsync(() => _device.TapAsync(point.Value.X, point.Value.Y, ct), ct);
+            await RunDeviceActionAsync(() => _device.BackAsync(ct), ct);
             await Task.Delay(PopupPostTapDelay, ct);
             return true;
         }
@@ -133,17 +140,20 @@ public sealed class BotApi : IBotApi
         return false;
     }
 
-    public Task TapAsync(int x, int y, CancellationToken ct)
-        => RunDeviceActionAsync(() => _device.TapAsync(x, y, ct), ct);
+    public Task TapAsync(int x, int y, CancellationToken ct) =>
+        RunDeviceActionAsync(() => _device.TapAsync(x, y, ct), ct);
 
-    public Task TapAsync(ScreenPoint point, CancellationToken ct)
-        => RunDeviceActionAsync(() => _device.TapAsync(point.X, point.Y, ct), ct);
+    public Task TapAsync(ScreenPoint point, CancellationToken ct) =>
+        RunDeviceActionAsync(() => _device.TapAsync(point.X, point.Y, ct), ct);
 
-    public Task SwipeAsync(ScreenPoint start, ScreenPoint end, int durationMs, CancellationToken ct)
-        => RunDeviceActionAsync(() => _device.SwipeAsync(start, end, durationMs, ct), ct);
+    public Task SwipeAsync(ScreenPoint start, ScreenPoint end, int durationMs, CancellationToken ct) =>
+        RunDeviceActionAsync(() => _device.SwipeAsync(start, end, durationMs, ct), ct);
 
-    public Task InputTextAsync(string text, CancellationToken ct)
-        => RunDeviceActionAsync(() => _device.InputTextAsync(text, ct), ct);
+    public Task InputTextAsync(string text, CancellationToken ct) =>
+        RunDeviceActionAsync(() => _device.InputTextAsync(text, ct), ct);
+
+    public Task BackAsync(CancellationToken ct) =>
+        RunDeviceActionAsync(() => _device.BackAsync(ct), ct);
 
     public async Task<string> ReadTextAsync(ScreenRect roi, CancellationToken ct)
     {
@@ -159,10 +169,6 @@ public sealed class BotApi : IBotApi
         return _vision.GetPixel(screen, x, y);
     }
 
-    public async Task BackAsync(CancellationToken ct)
-    {
-        throw new NotImplementedException();
-    }
 
     /// <summary>
     /// Waits for the pause gate to be open.
@@ -179,5 +185,31 @@ public sealed class BotApi : IBotApi
     {
         await EnsureNotPausedAsync(ct);
         await action();
+    }
+
+    private static async Task<string?> TrySaveDebugScreenshotAsync(
+        ScreenFrame screen,
+        string templatePath,
+        CancellationToken ct)
+    {
+        try
+        {
+            var folder = Path.Combine(AppContext.BaseDirectory, "debug_screenshots");
+            Directory.CreateDirectory(folder);
+
+            var baseName = Path.GetFileNameWithoutExtension(templatePath);
+
+            var timestamp = DateTimeOffset.UtcNow.ToString("yyyyMMdd_HHmmss_fff");
+            var fileName = $"{timestamp}_{baseName}.png";
+            var fullPath = Path.Combine(folder, fileName);
+
+            await File.WriteAllBytesAsync(fullPath, screen.PngBytes, ct);
+            return fullPath;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to save debug screenshot.");
+            return null;
+        }
     }
 }

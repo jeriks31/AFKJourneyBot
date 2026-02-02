@@ -17,3 +17,4 @@ artifacts/
 *.nupkg
 *.snupkg
 *.log
+debug_screenshots/

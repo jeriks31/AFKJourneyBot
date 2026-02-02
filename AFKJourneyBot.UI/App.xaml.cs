@@ -34,6 +34,7 @@ public partial class App : Application
         var tasks = new List<TaskDescriptor>
         {
             new(SampleTask.TaskName, () => new SampleTask(api)),
+            new(PushAfkStages.TaskName, () => new PushAfkStages(api)),
             new(PushSeasonAfkStages.TaskName, () => new PushSeasonAfkStages(api))
         };
 

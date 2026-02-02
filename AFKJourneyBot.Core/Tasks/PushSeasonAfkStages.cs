@@ -6,21 +6,58 @@ namespace AFKJourneyBot.Core.Tasks;
 
 public class PushSeasonAfkStages(IBotApi botApi) : IBotTask
 {
-    private const int AttemptsPerFormation = 1; // TODO: Make configurable
-    private const int FormationsToTry = 5; // TODO: Make configurable
     public const string TaskName = "Push Season AFK Stages";
     public string Name => TaskName;
 
     public async Task RunAsync(CancellationToken ct)
     {
-        // TODO: Handle startup from non-root view. i.e. if the game is currently deep in a menu
+        await PushAfkStagesRunner.RunAsync(
+            botApi,
+            "Season AFK Stages",
+            new ScreenPoint(300, 1610),
+            ct);
+    }
+}
+
+public class PushAfkStages(IBotApi botApi) : IBotTask
+{
+    public const string TaskName = "Push AFK Stages";
+    public string Name => TaskName;
+
+    public async Task RunAsync(CancellationToken ct)
+    {
+        await PushAfkStagesRunner.RunAsync(
+            botApi,
+            "AFK Stages",
+            new ScreenPoint(800, 1610),
+            ct);
+    }
+}
+
+internal static class PushAfkStagesRunner
+{
+    private const int AttemptsPerFormation = 1; // TODO: Make configurable
+    private const int FormationsToTry = 5; // TODO: Make configurable
+
+    public static async Task RunAsync(
+        IBotApi botApi,
+        string gameModeLabel,
+        ScreenPoint entryTapPoint,
+        CancellationToken ct)
+    {
+        Log.Information("Navigating to main game view");
+        while (await botApi.FindTemplateAsync("battle_modes.png", ct) is null)
+        {
+            await botApi.BackAsync(ct);
+            await Task.Delay(2000, ct);
+        }
 
         // Enter "AFK Stage" main menu
         await botApi.TapAsync(new ScreenPoint(80, 1850), ct);
-        await Task.Delay(2500, ct);
+        await Task.Delay(2000, ct);
 
-        Log.Information("Pushing Season AFK Stages");
-        await botApi.TapAsync(new ScreenPoint(300, 1610), ct);
+        Log.Information("Pushing {StageLabel}", gameModeLabel);
+        await botApi.TapAsync(entryTapPoint, ct); // Tap Either Season AFK Stages or Regular AFK Stages
 
         var victoryCount = 0;
         var defeatsOnCurrentStage = 0;
