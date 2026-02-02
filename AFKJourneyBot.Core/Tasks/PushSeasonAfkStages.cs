@@ -59,6 +59,7 @@ internal static class PushAfkStagesRunner
         Log.Information("Pushing {StageLabel}", gameModeLabel);
         await botApi.TapAsync(entryTapPoint, ct); // Tap Either Season AFK Stages or Regular AFK Stages
 
+        var totalBattleCount = 0;
         var victoryCount = 0;
         var defeatsOnCurrentStage = 0;
         var previousFormationIndex = -1;
@@ -106,18 +107,19 @@ internal static class PushAfkStagesRunner
                     Log.Information("Victory count: {VictoryCount}", victoryCount);
                     defeatsOnCurrentStage = 0;
                     previousFormationIndex = -1;
-                    await botApi.TapAsync(new ScreenPoint(750, 1810), ct); // Go to next
                     break;
                 case "defeat":
                     defeatsOnCurrentStage++;
-                    await botApi.TapAsync(new ScreenPoint(750, 1810), ct);
                     break;
                 default:
                     Log.Warning("Unknown battle result key: {Key}", match.Value.Key);
                     break;
             }
+
+            totalBattleCount++;
+            await botApi.TapAsync(new ScreenPoint(750, 1810), ct); // Go to next
         }
 
-        Log.Information("Defeat limit reached, moving on");
+        Log.Information("Defeat limit reached, moving on. Pushed a total of {VictoryCount} stages in {BattleCount} battles", victoryCount, totalBattleCount);
     }
 }
