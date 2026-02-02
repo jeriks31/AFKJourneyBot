@@ -84,36 +84,18 @@
                 CornerRadius="6">
             <DockPanel>
                 <TextBlock Text="Logs" FontSize="16" FontWeight="SemiBold" DockPanel.Dock="Top" Margin="0,0,0,8"/>
-                <ListBox ItemsSource="{Binding Logs}"
-                         local:AutoScrollBehavior.IsEnabled="True"
-                         Background="#0E1117"
-                         BorderThickness="0"
-                         FontFamily="Consolas"
-                         FontSize="12"
-                         ScrollViewer.VerticalScrollBarVisibility="Auto">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding Message}">
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Foreground" Value="{StaticResource Brush.LogInfo}"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding Level}" Value="Warning">
-                                                <Setter Property="Foreground" Value="{StaticResource Brush.LogWarning}"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding Level}" Value="Error">
-                                                <Setter Property="Foreground" Value="{StaticResource Brush.LogError}"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding Level}" Value="Fatal">
-                                                <Setter Property="Foreground" Value="{StaticResource Brush.LogError}"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
+                <RichTextBox local:RichTextBoxDocumentBehavior.Document="{Binding LogsDocument}"
+                             local:RichTextBoxAutoScrollBehavior.IsEnabled="True"
+                             Background="#0E1117"
+                             BorderThickness="0"
+                             FontFamily="Consolas"
+                             FontSize="12"
+                             Foreground="{StaticResource Brush.LogInfo}"
+                             IsReadOnly="True"
+                             IsReadOnlyCaretVisible="False"
+                             Padding="6,4"
+                             VerticalScrollBarVisibility="Auto"
+                             HorizontalScrollBarVisibility="Auto"/>
             </DockPanel>
         </Border>
     </Grid>

@@ -1,8 +1,10 @@
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Windows;
+using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -21,8 +23,11 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     private CancellationTokenSource? _previewCts;
     private ImageSource? _previewImage;
     private DateTimeOffset _lastPreviewFrameAt = DateTimeOffset.MinValue;
+    private FlowDocument _logsDocument = new();
+    private int _lastLogCount;
     private bool _isRunning;
     private bool _isPaused;
+    private readonly NotifyCollectionChangedEventHandler _logsChangedHandler;
 
     public MainViewModel(TaskManager taskManager, IDeviceController device, IEnumerable<TaskDescriptor> tasks, int previewIntervalMs)
     {
@@ -38,6 +43,13 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         _taskManager.StateChanged += (_, _) => UpdateState();
         UpdateState();
         StartPreview();
+
+        _logsChangedHandler = (_, e) => UpdateLogsDocument(e);
+        if (LogStore.Entries is INotifyCollectionChanged notify)
+        {
+            notify.CollectionChanged += _logsChangedHandler;
+        }
+        UpdateLogsDocument(null);
     }
 
     public ObservableCollection<LogEntry> Logs { get; } = LogStore.Entries;
@@ -48,6 +60,21 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     public ICommand StopCommand { get; }
 
     public string PauseButtonText => IsPaused ? "Resume" : "Pause";
+
+    public FlowDocument LogsDocument
+    {
+        get => _logsDocument;
+        private set
+        {
+            if (ReferenceEquals(value, _logsDocument))
+            {
+                return;
+            }
+
+            _logsDocument = value;
+            OnPropertyChanged();
+        }
+    }
 
     public ImageSource? PreviewImage
     {
@@ -101,6 +128,10 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     {
         _previewCts?.Cancel();
         _previewCts?.Dispose();
+        if (LogStore.Entries is INotifyCollectionChanged notify)
+        {
+            notify.CollectionChanged -= _logsChangedHandler;
+        }
     }
 
     private void RunTask(TaskDescriptor? descriptor)
@@ -202,6 +233,80 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         image.EndInit();
         image.Freeze();
         return image;
+    }
+
+    private void UpdateLogsDocument(NotifyCollectionChangedEventArgs? change)
+    {
+        var dispatcher = Application.Current?.Dispatcher;
+        if (dispatcher == null || dispatcher.CheckAccess())
+        {
+            SetLogsDocument(change);
+        }
+        else
+        {
+            dispatcher.Invoke(() => SetLogsDocument(change));
+        }
+    }
+
+    private void SetLogsDocument(NotifyCollectionChangedEventArgs? change)
+    {
+        if (change?.Action == NotifyCollectionChangedAction.Add &&
+            change.NewItems != null &&
+            _logsDocument.Blocks.Count == _lastLogCount)
+        {
+            foreach (LogEntry entry in change.NewItems)
+            {
+                AppendLogEntry(_logsDocument, entry);
+            }
+            _lastLogCount = Logs.Count;
+            return;
+        }
+
+        var document = new FlowDocument
+        {
+            PagePadding = new Thickness(0)
+        };
+
+        foreach (var entry in Logs)
+        {
+            AppendLogEntry(document, entry);
+        }
+
+        _lastLogCount = Logs.Count;
+        LogsDocument = document;
+    }
+
+    private static void AppendLogEntry(FlowDocument document, LogEntry entry)
+    {
+        var paragraph = new Paragraph(new Run(entry.Message))
+        {
+            Margin = new Thickness(0)
+        };
+
+        var brush = GetLogBrush(entry.Level);
+        if (brush != null)
+        {
+            paragraph.Foreground = brush;
+        }
+
+        document.Blocks.Add(paragraph);
+    }
+
+    private static Brush? GetLogBrush(string level)
+    {
+        var resources = Application.Current?.Resources;
+        if (resources == null)
+        {
+            return null;
+        }
+
+        return level switch
+        {
+            "Warning" => resources["Brush.LogWarning"] as Brush,
+            "Error" => resources["Brush.LogError"] as Brush,
+            "Fatal" => resources["Brush.LogError"] as Brush,
+            _ => resources["Brush.LogInfo"] as Brush
+        };
     }
 
     private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
