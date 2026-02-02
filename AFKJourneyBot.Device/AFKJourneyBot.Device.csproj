@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="adb.exe" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="platform-tools\**\*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

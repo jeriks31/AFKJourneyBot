@@ -5,7 +5,7 @@ namespace AFKJourneyBot.Vision;
 
 public interface IVisionService
 {
-    Task<ScreenPoint?> FindTemplateAsync(ScreenFrame screen, string templatePath, double threshold = 0.92, CancellationToken ct = default);
+    Task<ScreenPoint?> FindTemplateAsync(ScreenFrame screen, string templatePath, double threshold, CancellationToken ct);
     RgbColor GetPixel(ScreenFrame screen, int x, int y);
 }
 
@@ -24,7 +24,7 @@ public static class ScreenFrameCvExtensions
 
 public sealed class VisionService : IVisionService
 {
-    public Task<ScreenPoint?> FindTemplateAsync(ScreenFrame screen, string templatePath, double threshold = 0.92, CancellationToken ct = default)
+    public Task<ScreenPoint?> FindTemplateAsync(ScreenFrame screen, string templatePath, double threshold, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
 

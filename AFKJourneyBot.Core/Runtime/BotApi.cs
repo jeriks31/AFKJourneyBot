@@ -27,7 +27,7 @@ public sealed class BotApi : IBotApi
     }
 
     /// <inheritdoc />
-    public async Task<ScreenPoint?> FindTemplateAsync(string templatePath, double threshold = 0.92, CancellationToken ct = default)
+    public async Task<ScreenPoint?> FindTemplateAsync(string templatePath, CancellationToken ct, double threshold = 0.92)
     {
         await EnsureNotPausedAsync(ct);
         var screen = await _device.ScreenshotAsync(ct);
@@ -37,10 +37,10 @@ public sealed class BotApi : IBotApi
     /// <inheritdoc />
     public async Task<ScreenPoint?> WaitForTemplateAsync(
         string templatePath,
+        CancellationToken ct,
         double threshold = 0.92,
         TimeSpan? timeout = null,
-        TimeSpan? pollInterval = null,
-        CancellationToken ct = default)
+        TimeSpan? pollInterval = null)
     {
         var interval = pollInterval ?? DefaultPollInterval;
         var start = DateTimeOffset.UtcNow;
@@ -64,26 +64,26 @@ public sealed class BotApi : IBotApi
         }
     }
 
-    public Task TapAsync(int x, int y, CancellationToken ct = default)
+    public Task TapAsync(int x, int y, CancellationToken ct)
         => RunDeviceActionAsync(() => _device.TapAsync(x, y, ct), ct);
 
-    public Task TapAsync(ScreenPoint point, CancellationToken ct = default)
+    public Task TapAsync(ScreenPoint point, CancellationToken ct)
         => RunDeviceActionAsync(() => _device.TapAsync(point.X, point.Y, ct), ct);
 
-    public Task SwipeAsync(ScreenPoint start, ScreenPoint end, int durationMs = 250, CancellationToken ct = default)
+    public Task SwipeAsync(ScreenPoint start, ScreenPoint end, int durationMs, CancellationToken ct)
         => RunDeviceActionAsync(() => _device.SwipeAsync(start, end, durationMs, ct), ct);
 
-    public Task InputTextAsync(string text, CancellationToken ct = default)
+    public Task InputTextAsync(string text, CancellationToken ct)
         => RunDeviceActionAsync(() => _device.InputTextAsync(text, ct), ct);
 
-    public async Task<string> ReadTextAsync(ScreenRect roi, CancellationToken ct = default)
+    public async Task<string> ReadTextAsync(ScreenRect roi, CancellationToken ct)
     {
         await EnsureNotPausedAsync(ct);
         var screen = await _device.ScreenshotAsync(ct);
         return await _ocr.ReadTextAsync(screen, roi, ct);
     }
 
-    public async Task<RgbColor> GetPixelAsync(int x, int y, CancellationToken ct = default)
+    public async Task<RgbColor> GetPixelAsync(int x, int y, CancellationToken ct)
     {
         await EnsureNotPausedAsync(ct);
         var screen = await _device.ScreenshotAsync(ct);

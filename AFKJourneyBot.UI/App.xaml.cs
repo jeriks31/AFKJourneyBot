@@ -24,9 +24,7 @@ public partial class App : Application
         ConfigureLogging();
 
         var config = AppConfig.Load();
-        var device = new AdbDeviceController(
-            deviceSerial: config.DeviceSerial,
-            warningLogger: message => Log.Warning(message));
+        var device = new AdbDeviceController(Log.Warning);
         var vision = new VisionService();
         _ocr = CreateOcrService();
         var pauseGate = new AsyncManualResetEvent(true);

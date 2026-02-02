@@ -28,7 +28,7 @@ public sealed class AsyncManualResetEvent
     /// Asynchronously waits until the gate is open.
     /// </summary>
     /// <param name="ct">Cancellation token to stop waiting.</param>
-    public Task WaitAsync(CancellationToken ct = default)
+    public Task WaitAsync(CancellationToken ct)
     {
         var waitTask = _tcs.Task;
         return ct.CanBeCanceled ? waitTask.WaitAsync(ct) : waitTask;

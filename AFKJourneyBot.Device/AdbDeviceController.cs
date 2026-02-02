@@ -5,40 +5,39 @@ namespace AFKJourneyBot.Device;
 
 public interface IDeviceController
 {
-    Task<ScreenFrame> ScreenshotAsync(CancellationToken ct = default);
-    Task TapAsync(int x, int y, CancellationToken ct = default);
-    Task SwipeAsync(ScreenPoint start, ScreenPoint end, int durationMs = 250, CancellationToken ct = default);
-    Task InputTextAsync(string text, CancellationToken ct = default);
+    Task<ScreenFrame> ScreenshotAsync(CancellationToken ct);
+    Task TapAsync(int x, int y, CancellationToken ct);
+    Task SwipeAsync(ScreenPoint start, ScreenPoint end, int durationMs, CancellationToken ct);
+    Task InputTextAsync(string text, CancellationToken ct);
 }
 
 public sealed class AdbDeviceController : IDeviceController
 {
     private readonly string _adbPath;
     private string? _deviceSerial;
-    private readonly Action<string>? _warningLogger;
+    private readonly Action<string> _warningLogger;
     private static readonly TimeSpan CommandTimeout = TimeSpan.FromSeconds(15);
 
-    public AdbDeviceController(string? deviceSerial = null, Action<string>? warningLogger = null)
+    public AdbDeviceController(Action<string> warningLogger)
     {
-        _adbPath = Path.Combine(AppContext.BaseDirectory, "adb.exe");
-        _deviceSerial = deviceSerial;
+        _adbPath = Path.Combine(AppContext.BaseDirectory, "platform-tools", "adb.exe");
         _warningLogger = warningLogger;
     }
 
-    public async Task<ScreenFrame> ScreenshotAsync(CancellationToken ct = default)
+    public async Task<ScreenFrame> ScreenshotAsync(CancellationToken ct)
     {
         await EnsureDeviceSelectedAsync(ct);
         var pngBytes = await RunAdbForBinaryOutputAsync(BuildArgs("exec-out screencap -p"), ct);
         return new ScreenFrame(pngBytes, DateTimeOffset.UtcNow);
     }
 
-    public Task TapAsync(int x, int y, CancellationToken ct = default)
+    public Task TapAsync(int x, int y, CancellationToken ct)
         => RunAdbShellAsync($"input tap {x} {y}", ct);
 
-    public Task SwipeAsync(ScreenPoint start, ScreenPoint end, int durationMs = 250, CancellationToken ct = default)
+    public Task SwipeAsync(ScreenPoint start, ScreenPoint end, int durationMs, CancellationToken ct)
         => RunAdbShellAsync($"input swipe {start.X} {start.Y} {end.X} {end.Y} {durationMs}", ct);
 
-    public Task InputTextAsync(string text, CancellationToken ct = default)
+    public Task InputTextAsync(string text, CancellationToken ct)
         => RunAdbShellAsync($"input text {EscapeInputText(text)}", ct);
 
     private string BuildArgs(string args)
