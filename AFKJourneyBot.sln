@@ -1,0 +1,40 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AFKJourneyBot.UI", "AFKJourneyBot.UI\AFKJourneyBot.UI.csproj", "{EE59C3DC-B8B5-465C-B4DE-699639B48999}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AFKJourneyBot.Core", "AFKJourneyBot.Core\AFKJourneyBot.Core.csproj", "{5A13A865-C5BA-45A4-BC64-E7B344027F37}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AFKJourneyBot.Device", "AFKJourneyBot.Device\AFKJourneyBot.Device.csproj", "{2E7EAB73-0D24-4AC1-B28D-D7E037AAD742}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AFKJourneyBot.Vision", "AFKJourneyBot.Vision\AFKJourneyBot.Vision.csproj", "{A33382FA-C29D-4536-8E1C-C995B51344A4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AFKJourneyBot.Common", "AFKJourneyBot.Common\AFKJourneyBot.Common.csproj", "{2A7181F5-D952-4D02-8BD3-AD57215FC58C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EE59C3DC-B8B5-465C-B4DE-699639B48999}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EE59C3DC-B8B5-465C-B4DE-699639B48999}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EE59C3DC-B8B5-465C-B4DE-699639B48999}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EE59C3DC-B8B5-465C-B4DE-699639B48999}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5A13A865-C5BA-45A4-BC64-E7B344027F37}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5A13A865-C5BA-45A4-BC64-E7B344027F37}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5A13A865-C5BA-45A4-BC64-E7B344027F37}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5A13A865-C5BA-45A4-BC64-E7B344027F37}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2E7EAB73-0D24-4AC1-B28D-D7E037AAD742}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2E7EAB73-0D24-4AC1-B28D-D7E037AAD742}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2E7EAB73-0D24-4AC1-B28D-D7E037AAD742}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2E7EAB73-0D24-4AC1-B28D-D7E037AAD742}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A33382FA-C29D-4536-8E1C-C995B51344A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A33382FA-C29D-4536-8E1C-C995B51344A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A33382FA-C29D-4536-8E1C-C995B51344A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A33382FA-C29D-4536-8E1C-C995B51344A4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2A7181F5-D952-4D02-8BD3-AD57215FC58C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2A7181F5-D952-4D02-8BD3-AD57215FC58C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2A7181F5-D952-4D02-8BD3-AD57215FC58C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2A7181F5-D952-4D02-8BD3-AD57215FC58C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

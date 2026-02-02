@@ -1,0 +1,31 @@
+﻿<Application x:Class="AFKJourneyBot.UI.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:AFKJourneyBot.UI">
+    <Application.Resources>
+        <SolidColorBrush x:Key="Brush.WindowBackground" Color="#0F1115"/>
+        <SolidColorBrush x:Key="Brush.PanelBackground" Color="#151922"/>
+        <SolidColorBrush x:Key="Brush.PanelBorder" Color="#2C3342"/>
+        <SolidColorBrush x:Key="Brush.TextPrimary" Color="#E6E9EF"/>
+        <SolidColorBrush x:Key="Brush.TextSecondary" Color="#9AA3B2"/>
+        <SolidColorBrush x:Key="Brush.Accent" Color="#58A6FF"/>
+        <SolidColorBrush x:Key="Brush.LogInfo" Color="#C9D4E5"/>
+        <SolidColorBrush x:Key="Brush.LogWarning" Color="#F0C674"/>
+        <SolidColorBrush x:Key="Brush.LogError" Color="#F28B82"/>
+
+        <Style TargetType="Window">
+            <Setter Property="Background" Value="{StaticResource Brush.WindowBackground}"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush.TextPrimary}"/>
+        </Style>
+        <Style TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource Brush.TextPrimary}"/>
+        </Style>
+        <Style TargetType="Button">
+            <Setter Property="Background" Value="#1E2633"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush.TextPrimary}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Brush.PanelBorder}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,4"/>
+        </Style>
+    </Application.Resources>
+</Application>
