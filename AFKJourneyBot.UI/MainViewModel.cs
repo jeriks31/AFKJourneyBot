@@ -20,6 +20,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     private readonly int _previewIntervalMs;
     private CancellationTokenSource? _previewCts;
     private ImageSource? _previewImage;
+    private DateTimeOffset _lastPreviewFrameAt = DateTimeOffset.MinValue;
     private bool _isRunning;
     private bool _isPaused;
 
@@ -45,6 +46,8 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     public ICommand RunTaskCommand { get; }
     public ICommand PauseCommand { get; }
     public ICommand StopCommand { get; }
+
+    public string PauseButtonText => IsPaused ? "Resume" : "Pause";
 
     public ImageSource? PreviewImage
     {
@@ -88,6 +91,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
 
             _isPaused = value;
             OnPropertyChanged();
+            OnPropertyChanged(nameof(PauseButtonText));
         }
     }
 
@@ -155,7 +159,14 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         {
             try
             {
-                var frame = await _device.ScreenshotAsync(ct);
+                var frame = _device.MostRecentScreenFrame;
+                if (frame == null || frame.CapturedAtUtc == _lastPreviewFrameAt)
+                {
+                    await Task.Delay(_previewIntervalMs, ct);
+                    continue;
+                }
+
+                _lastPreviewFrameAt = frame.CapturedAtUtc;
                 var image = CreateBitmapImage(frame.PngBytes);
                 var dispatcher = Application.Current?.Dispatcher;
                 if (dispatcher == null || dispatcher.CheckAccess())

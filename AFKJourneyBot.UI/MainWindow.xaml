@@ -42,7 +42,7 @@
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
-                    <Button Content="Pause" Height="32" Margin="0,8,0,0" Command="{Binding PauseCommand}"/>
+                    <Button Content="{Binding PauseButtonText}" Height="32" Margin="0,8,0,0" Command="{Binding PauseCommand}"/>
                     <Button Content="Stop" Height="32" Margin="0,8,0,0" Command="{Binding StopCommand}"/>
                 </StackPanel>
             </Border>
