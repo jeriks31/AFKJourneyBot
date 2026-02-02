@@ -17,6 +17,7 @@ public interface IBotTask
 ## 2) Create a new task
 
 Create a new class under `AFKJourneyBot.Core/Tasks/`.
+Declare a public static `TaskName` so the UI can list tasks without instantiating them.
 
 Example:
 
@@ -30,7 +31,8 @@ namespace AFKJourneyBot.Core.Tasks;
 
 public sealed class DailyQuestTask : IBotTask
 {
-    public string Name => "Daily Quests";
+    public const string TaskName = "Daily Quests";
+    public string Name => TaskName;
     private readonly IBotApi _api;
 
     public DailyQuestTask(IBotApi api)
@@ -68,8 +70,8 @@ Open `AFKJourneyBot.UI/App.xaml.cs` and add a new `TaskDescriptor`:
 ```csharp
 var tasks = new List<TaskDescriptor>
 {
-    new("Sample Task", () => new SampleTask(api)),
-    new("Daily Quests", () => new DailyQuestTask(api))
+    new(SampleTask.TaskName, () => new SampleTask(api)),
+    new(DailyQuestTask.TaskName, () => new DailyQuestTask(api))
 };
 ```
 
@@ -128,4 +130,3 @@ if (ok == null) return;
 ```
 
 ---
-

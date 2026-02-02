@@ -29,22 +29,34 @@
                     BorderThickness="1"
                     Padding="12"
                     CornerRadius="6">
-                <StackPanel>
-                    <TextBlock Text="Tasks" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12"/>
-                    <ItemsControl ItemsSource="{Binding Tasks}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Button Content="{Binding Name}"
-                                        Height="32"
-                                        Margin="0,0,0,8"
-                                        Command="{Binding DataContext.RunTaskCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                        CommandParameter="{Binding}"/>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                    <Button Content="{Binding PauseButtonText}" Height="32" Margin="0,8,0,0" Command="{Binding PauseCommand}"/>
-                    <Button Content="Stop" Height="32" Margin="0,8,0,0" Command="{Binding StopCommand}"/>
-                </StackPanel>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <StackPanel Grid.Row="0">
+                        <TextBlock Text="Tasks" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                        <ItemsControl ItemsSource="{Binding Tasks}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Content="{Binding Name}"
+                                            Height="32"
+                                            Margin="0,0,0,8"
+                                            Command="{Binding DataContext.RunTaskCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            CommandParameter="{Binding}"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                    <Grid Grid.Row="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Content="{Binding PauseButtonText}" Height="32" Margin="0,8,8,0" Command="{Binding PauseCommand}" HorizontalAlignment="Stretch"/>
+                        <Button Grid.Column="1" Content="Stop" Height="32" Margin="0,8,0,0" Command="{Binding StopCommand}" HorizontalAlignment="Stretch"/>
+                    </Grid>
+                </Grid>
             </Border>
 
             <Border Grid.Column="2"

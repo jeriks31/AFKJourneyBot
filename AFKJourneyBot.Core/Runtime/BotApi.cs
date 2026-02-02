@@ -9,7 +9,7 @@ namespace AFKJourneyBot.Core.Runtime;
 /// </summary>
 public sealed class BotApi : IBotApi
 {
-    private static readonly TimeSpan DefaultPollInterval = TimeSpan.FromMilliseconds(750);
+    private static readonly TimeSpan DefaultPollInterval = TimeSpan.FromMilliseconds(500);
     private readonly IDeviceController _device;
     private readonly IVisionService _vision;
     private readonly IOcrService _ocr;
@@ -53,6 +53,43 @@ public sealed class BotApi : IBotApi
             if (point != null)
             {
                 return point;
+            }
+
+            if (timeout.HasValue && DateTimeOffset.UtcNow - start >= timeout.Value)
+            {
+                return null;
+            }
+
+            await Task.Delay(interval, ct);
+        }
+    }
+
+    public async Task<TemplateMatch?> WaitForAnyTemplateAsync(
+        IReadOnlyList<TemplateWait> candidates,
+        CancellationToken ct,
+        TimeSpan? timeout = null,
+        TimeSpan? pollInterval = null)
+    {
+        if (candidates == null || candidates.Count == 0)
+        {
+            throw new ArgumentException("At least one template must be provided.", nameof(candidates));
+        }
+
+        var interval = pollInterval ?? DefaultPollInterval;
+        var start = DateTimeOffset.UtcNow;
+
+        while (true)
+        {
+            await EnsureNotPausedAsync(ct);
+            var screen = await _device.ScreenshotAsync(ct);
+
+            foreach (var candidate in candidates)
+            {
+                var point = await _vision.FindTemplateAsync(screen, candidate.Path, candidate.Threshold, ct);
+                if (point != null)
+                {
+                    return new TemplateMatch(candidate.Key, point.Value);
+                }
             }
 
             if (timeout.HasValue && DateTimeOffset.UtcNow - start >= timeout.Value)

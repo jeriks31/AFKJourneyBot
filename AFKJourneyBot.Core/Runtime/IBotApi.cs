@@ -21,6 +21,14 @@ public interface IBotApi
         TimeSpan? timeout = null,
         TimeSpan? pollInterval = null);
     /// <summary>
+    /// Waits until any of the provided templates is found or a timeout occurs.
+    /// </summary>
+    Task<TemplateMatch?> WaitForAnyTemplateAsync(
+        IReadOnlyList<TemplateWait> candidates,
+        CancellationToken ct,
+        TimeSpan? timeout = null,
+        TimeSpan? pollInterval = null);
+    /// <summary>
     /// Taps a screen coordinate.
     /// </summary>
     Task TapAsync(int x, int y, CancellationToken ct);

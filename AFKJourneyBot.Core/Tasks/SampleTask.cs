@@ -6,7 +6,8 @@ namespace AFKJourneyBot.Core.Tasks;
 
 public class SampleTask : IBotTask
 {
-    public string Name => "Sample Task";
+    public const string TaskName = "Sample Task";
+    public string Name => TaskName;
 
     private readonly IBotApi _api;
 

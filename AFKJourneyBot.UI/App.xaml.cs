@@ -33,7 +33,8 @@ public partial class App : Application
 
         var tasks = new List<TaskDescriptor>
         {
-            new("Sample Task", () => new SampleTask(api))
+            new(SampleTask.TaskName, () => new SampleTask(api)),
+            new(PushSeasonAfkStages.TaskName, () => new PushSeasonAfkStages(api))
         };
 
         _viewModel = new MainViewModel(taskManager, device, tasks, config.PreviewIntervalMs);
