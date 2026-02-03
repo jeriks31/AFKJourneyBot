@@ -1,4 +1,14 @@
-# AFK Journey Bot — Task Authoring Guide
+# How to run (WIP)
+
+install any android emulator with ADB support. for example bluestacks or mumuplayer. for mumuplayer adb is enabled OOTB,
+in bluestacks it needs to be enabled in settings.
+install and log in to AFK Journey on the emulator
+grab the latest github release
+
+# How to contribute
+
+### Requirements (TODO: better formatting and link to .net10)
+.NET 10
 
 This project is designed so tasks are easy to add and safe to run. Tasks are small classes that depend only on the **bot API** (not on raw ADB, vision, or OCR directly). This keeps pause/stop behavior reliable and makes debugging simple.
 
