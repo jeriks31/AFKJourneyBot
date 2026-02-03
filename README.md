@@ -22,40 +22,24 @@ Declare a public static `TaskName` so the UI can list tasks without instantiatin
 Example:
 
 ```csharp
-using AFKJourneyBot.Core.Runtime;
-using AFKJourneyBot.Core.Tasks;
-using AFKJourneyBot.Core.Definitions;
-using Serilog;
-
-namespace AFKJourneyBot.Core.Tasks;
-
-public sealed class DailyQuestTask : IBotTask
+public sealed class DailyQuestTask(IBotApi botApi) : IBotTask
 {
     public const string TaskName = "Daily Quests";
     public string Name => TaskName;
-    private readonly IBotApi _api;
-
-    public DailyQuestTask(IBotApi api)
-    {
-        _api = api;
-    }
 
     public async Task RunAsync(CancellationToken ct)
     {
         Log.Information("Daily quest task started");
 
-        var menu = await _api.WaitForTemplateAsync(
-            "main_menu.png",
-            timeout: TimeSpan.FromSeconds(10),
-            ct: ct);
+        var menu = await botApi.WaitForTemplateAsync("main_menu.png", ct);
 
-        if (menu == null)
+        if (menu is null)
         {
             Log.Warning("Main menu not found, aborting.");
             return;
         }
 
-        await _api.TapAsync(menu.Value, ct);
+        await botApi.TapAsync(menu.Value, ct);
         await Task.Delay(500, ct);
 
         // More steps...
@@ -77,56 +61,15 @@ var tasks = new List<TaskDescriptor>
 
 The UI will automatically render a button for each task.
 
-## 4) Use templates and screen regions
+## 4) Use templates
 
-Place template images in `AFKJourneyBot.UI/templates/` so they are copied to the app output.
-For OCR or pixel checks, define screen regions and use `ScreenRect`:
-
-```csharp
-var rect = ScreenRect.FromXYWH(100, 200, 220, 40);
-var text = await _api.ReadTextAsync(rect, ct);
-```
+Place template images in `AFKJourneyBot.UI/templates/`.
 
 ## 5) Important rules (pause/stop safety)
 
 To keep Pause and Stop working correctly:
 
-- Always use **IBotApi** methods (`TapAsync`, `WaitForTemplateAsync`, `ReadTextAsync`, etc.).
+- Always use **IBotApi** methods (`TapAsync`, `WaitForTemplateAsync`, `ReadTextAsync`, etc.). Avoid direct ADB/vision calls from tasks
 - Always pass the **cancellation token** to delays or loops: `await Task.Delay(500, ct);`.
-- Avoid direct ADB/vision calls from tasks (unless you understand the pause/stop consequences).
-
-## 6) Debugging tips
-
-- All tasks should log key steps using Serilog: `Log.Information(...)`.
-- Use the preview window to verify coordinates and template matches.
-
-## 7) Common patterns
-
-**Tap a button if it appears**
-
-```csharp
-var point = await _api.FindTemplateAsync("button.png", ct: ct);
-if (point != null)
-{
-    await _api.TapAsync(point.Value, ct);
-}
-```
-
-**Wait and tap**
-
-```csharp
-var point = await _api.WaitForTemplateAsync("open.png", ct: ct);
-if (point != null)
-{
-    await _api.TapAsync(point.Value, ct);
-}
-```
-
-**Wait for a screen to appear**
-
-```csharp
-var ok = await _api.WaitForTemplateAsync("screen_marker.png", timeout: TimeSpan.FromSeconds(8), ct: ct);
-if (ok == null) return;
-```
 
 ---
