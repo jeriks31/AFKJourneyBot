@@ -23,7 +23,7 @@ public sealed class AdbDeviceController : IDeviceController
 
     public AdbDeviceController(Action<string> warningLogger)
     {
-        _adbPath = Path.Combine(AppContext.BaseDirectory, "platform-tools", "adb.exe");
+        _adbPath = PlatformToolsBootstrapper.AdbPath;
         _warningLogger = warningLogger;
     }
 
@@ -145,14 +145,22 @@ public sealed class AdbDeviceController : IDeviceController
         var devices = ParseDeviceSerials(output);
         if (devices.Count == 0)
         {
-            _warningLogger?.Invoke("No devices detected.");
+            // Restart adb server and retry
+            await TryRestartServerAsync(ct);
+            output = await RunAdbForTextOutputAsync("devices", ct);
+            devices = ParseDeviceSerials(output);
+        }
+
+        if (devices.Count == 0)
+        {
+            _warningLogger.Invoke("No devices detected.");
             return;
         }
 
         _deviceSerial = devices[0];
         if (devices.Count > 1)
         {
-            _warningLogger?.Invoke($"Multiple devices detected. Using {_deviceSerial}.");
+            _warningLogger.Invoke($"Multiple devices detected. Using {_deviceSerial}.");
         }
     }
 
@@ -167,7 +175,7 @@ public sealed class AdbDeviceController : IDeviceController
                 continue;
             }
 
-            var parts = line.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+            var parts = line.Split([' ', '\t'], StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length < 2)
             {
                 continue;
@@ -180,6 +188,19 @@ public sealed class AdbDeviceController : IDeviceController
         }
 
         return devices;
+    }
+
+    private async Task TryRestartServerAsync(CancellationToken ct)
+    {
+        try
+        {
+            await RunAdbForTextOutputAsync("kill-server", ct);
+            await RunAdbForTextOutputAsync("start-server", ct);
+        }
+        catch (Exception ex)
+        {
+            _warningLogger.Invoke($"Failed to restart adb server: {ex.Message}");
+        }
     }
 
     private static string EscapeInputText(string text)

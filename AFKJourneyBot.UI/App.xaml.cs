@@ -23,6 +23,23 @@ public partial class App : Application
         base.OnStartup(e);
         ConfigureLogging();
 
+        try
+        {
+            PlatformToolsBootstrapper.EnsureAvailable(Log.Information, Log.Warning);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to prepare Android platform-tools.");
+            MessageBox.Show(
+                "AFKJourneyBot couldn't download Android platform-tools.\n" +
+                "Please check your internet connection or place platform-tools in the app folder and restart.",
+                "AFKJourneyBot",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+            Shutdown();
+            return;
+        }
+
         var config = AppConfig.Load();
         var device = new AdbDeviceController(Log.Warning);
         var vision = new VisionService();

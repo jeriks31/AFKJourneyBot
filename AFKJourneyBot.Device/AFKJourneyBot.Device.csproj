@@ -10,8 +10,4 @@
     <ProjectReference Include="..\AFKJourneyBot.Common\AFKJourneyBot.Common.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Include="platform-tools\**\*" CopyToOutputDirectory="PreserveNewest" />
-  </ItemGroup>
-
 </Project>
