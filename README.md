@@ -82,3 +82,15 @@ await botApi.WaitForTemplateAsync("afk_stages/records.png", ct);
 - Use **IBotApi** methods (`TapAsync`, `WaitForTemplateAsync`, `ReadTextAsync`, etc.). Avoid direct ADB/vision calls from tasks.
 - Always pass the **cancellation token** to delays/loops: `await Task.Delay(500, ct);`.
 
+## References
+
+**Tesseract OCR**
+- [Official docs](https://tesseract-ocr.github.io/)
+- [.NET wrapper](https://github.com/charlesw/tesseract)
+
+**OpenCV**
+- [Official docs](https://docs.opencv.org/4.x/)
+- [.NET wrapper](https://github.com/shimat/opencvsharp)
+
+**Tools**
+- [Pixspy](https://pixspy.com/): Useful for analyzing screenshots for button coordinates and RGB color values.
