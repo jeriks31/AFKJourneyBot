@@ -1,18 +1,20 @@
-# How to run (WIP)
+# AFK Journey Bot
 
-install any android emulator with ADB support. for example bluestacks or mumuplayer. for mumuplayer adb is enabled OOTB,
-in bluestacks it needs to be enabled in settings.
-install and log in to AFK Journey on the emulator
-grab the latest github release
+Automates common AFK Journey actions by driving an Android emulator via ADB and template matching.
 
-# How to contribute
+## Run (release build)
 
-### Requirements (TODO: better formatting and link to .net10)
-.NET 10
+1) Install an Android emulator with ADB support (MuMu, BlueStacks, etc.).
+2) Enable ADB in the emulator settings if required (BlueStacks needs this).
+3) Install and log in to AFK Journey on the emulator.
+4) Download the latest GitHub release and run `AFKJourneyBot.UI`.
 
-This project is designed so tasks are easy to add and safe to run. Tasks are small classes that depend only on the **bot API** (not on raw ADB, vision, or OCR directly). This keeps pause/stop behavior reliable and makes debugging simple.
+## Contribute / develop
 
-## 1) Task interface
+**Requirements**
+- .NET 10 SDK
+
+### Task authoring
 
 Every task implements `IBotTask`:
 
@@ -24,12 +26,8 @@ public interface IBotTask
 }
 ```
 
-## 2) Create a new task
-
-Create a new class under `AFKJourneyBot.Core/Tasks/`.
+Create a new class under `AFKJourneyBot.Core/Tasks/`.  
 Declare a public static `TaskName` so the UI can list tasks without instantiating them.
-
-Example:
 
 ```csharp
 public sealed class DailyQuestTask(IBotApi botApi) : IBotTask
@@ -42,7 +40,6 @@ public sealed class DailyQuestTask(IBotApi botApi) : IBotTask
         Log.Information("Daily quest task started");
 
         var menu = await botApi.WaitForTemplateAsync("main_menu.png", ct);
-
         if (menu is null)
         {
             Log.Warning("Main menu not found, aborting.");
@@ -57,9 +54,9 @@ public sealed class DailyQuestTask(IBotApi botApi) : IBotTask
 }
 ```
 
-## 3) Register the task in the UI
+### Register the task in the UI
 
-Open `AFKJourneyBot.UI/App.xaml.cs` and add a new `TaskDescriptor`:
+Open `AFKJourneyBot.UI/App.xaml.cs` and add a `TaskDescriptor`:
 
 ```csharp
 var tasks = new List<TaskDescriptor>
@@ -69,17 +66,19 @@ var tasks = new List<TaskDescriptor>
 };
 ```
 
-The UI will automatically render a button for each task.
+The UI renders a button for each task.
 
-## 4) Use templates
+### Templates
 
-Place template images in `AFKJourneyBot.UI/templates/`.
+Place template images in `AFKJourneyBot.UI/templates/`.  
+`IBotApi` methods accept **relative** template paths (including subfolders), e.g.:
 
-## 5) Important rules (pause/stop safety)
+```csharp
+await botApi.WaitForTemplateAsync("afk_stages/records.png", ct);
+```
 
-To keep Pause and Stop working correctly:
+### Safety rules (pause/stop)
 
-- Always use **IBotApi** methods (`TapAsync`, `WaitForTemplateAsync`, `ReadTextAsync`, etc.). Avoid direct ADB/vision calls from tasks
-- Always pass the **cancellation token** to delays or loops: `await Task.Delay(500, ct);`.
+- Use **IBotApi** methods (`TapAsync`, `WaitForTemplateAsync`, `ReadTextAsync`, etc.). Avoid direct ADB/vision calls from tasks.
+- Always pass the **cancellation token** to delays/loops: `await Task.Delay(500, ct);`.
 
----
