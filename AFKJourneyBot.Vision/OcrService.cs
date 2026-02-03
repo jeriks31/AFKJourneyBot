@@ -9,12 +9,6 @@ public interface IOcrService
     Task<string> ReadTextAsync(ScreenFrame screen, ScreenRect roi, CancellationToken ct);
 }
 
-public sealed class NullOcrService : IOcrService
-{
-    public Task<string> ReadTextAsync(ScreenFrame screen, ScreenRect roi, CancellationToken ct)
-        => Task.FromResult(string.Empty);
-}
-
 public sealed class TesseractOcrService : IOcrService, IDisposable
 {
     private readonly TesseractEngine _engine;

@@ -26,7 +26,7 @@ public partial class App : Application
         var config = AppConfig.Load();
         var device = new AdbDeviceController(Log.Warning);
         var vision = new VisionService();
-        _ocr = CreateOcrService();
+        _ocr = new TesseractOcrService();
         var pauseGate = new AsyncManualResetEvent(true);
         var api = new BotApi(device, vision, _ocr, pauseGate);
         var taskManager = new TaskManager(api, pauseGate);
@@ -75,18 +75,4 @@ public partial class App : Application
 
         Log.Information("Logger initialized");
     }
-
-    private static IOcrService CreateOcrService()
-    {
-        try
-        {
-            return new TesseractOcrService();
-        }
-        catch (Exception ex)
-        {
-            Log.Warning(ex, "OCR disabled. Missing tessdata folder next to the app.");
-            return new NullOcrService();
-        }
-    }
-
 }
