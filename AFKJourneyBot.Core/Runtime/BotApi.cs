@@ -11,7 +11,7 @@ namespace AFKJourneyBot.Core.Runtime;
 /// </summary>
 public sealed class BotApi : IBotApi
 {
-    private static readonly TimeSpan DefaultPollInterval = TimeSpan.FromMilliseconds(500);
+    private static readonly TimeSpan DefaultPollInterval = TimeSpan.FromMilliseconds(750);
     private static readonly TimeSpan PopupPostTapDelay = TimeSpan.FromMilliseconds(2000);
     private static readonly string[] PopupTemplateNames =
     [
