@@ -52,7 +52,8 @@ public partial class App : Application
         {
             new(PushRoutine.TaskName, () => new PushRoutine(api)),
             new(PushAfkStages.TaskName, () => new PushAfkStages(api)),
-            new(PushSeasonAfkStages.TaskName, () => new PushSeasonAfkStages(api))
+            new(PushSeasonAfkStages.TaskName, () => new PushSeasonAfkStages(api)),
+            new(HomesteadOrders.TaskName, () => new HomesteadOrders(api))
         };
 
         _viewModel = new MainViewModel(taskManager, device, tasks, config.PreviewIntervalMs);

@@ -17,7 +17,10 @@ public sealed class ScreenFrame
     public DateTimeOffset CapturedAtUtc { get; }
 }
 
-public readonly record struct ScreenPoint(int X, int Y);
+public readonly record struct ScreenPoint(int X, int Y)
+{
+    public ScreenPoint Add(int otherX, int otherY) => new(X + otherX, Y + otherY);
+}
 
 public readonly record struct ScreenRect(int X, int Y, int Width, int Height)
 {

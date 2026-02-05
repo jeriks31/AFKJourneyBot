@@ -7,16 +7,17 @@ namespace AFKJourneyBot.Core.Runtime;
 /// </summary>
 public interface IBotApi
 {
-    Task<ScreenPoint?> FindTemplateAsync(string relativeTemplatePath, CancellationToken ct, double threshold = 0.92);
+    Task<ScreenPoint?> FindTemplateAsync(string relativeTemplatePath, CancellationToken ct, double threshold = 0.99);
     /// <summary>
     /// Waits until a template is found or a timeout occurs. Accepts a relative template path.
     /// </summary>
     Task<ScreenPoint?> WaitForTemplateAsync(
         string relativeTemplatePath,
         CancellationToken ct,
-        double threshold = 0.92,
+        double threshold = 0.99,
         TimeSpan? timeout = null,
-        TimeSpan? pollInterval = null);
+        TimeSpan? pollInterval = null,
+        bool errorOnFail = true);
     /// <summary>
     /// Waits until any of the provided templates is found or a timeout occurs. Accepts relative template paths.
     /// </summary>
@@ -25,10 +26,7 @@ public interface IBotApi
         CancellationToken ct,
         TimeSpan? timeout = null,
         TimeSpan? pollInterval = null);
-    /// <summary>
-    /// Taps a screen coordinate.
-    /// </summary>
-    Task TapAsync(int x, int y, CancellationToken ct);
+
     /// <summary>
     /// Taps a screen coordinate.
     /// </summary>
@@ -52,5 +50,5 @@ public interface IBotApi
     /// <summary>
     /// Gets the RGB color of a pixel.
     /// </summary>
-    Task<RgbColor> GetPixelAsync(int x, int y, CancellationToken ct);
+    Task<RgbColor> GetPixelAsync(ScreenPoint point, CancellationToken ct);
 }

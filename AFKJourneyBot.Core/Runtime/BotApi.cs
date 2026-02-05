@@ -11,7 +11,7 @@ namespace AFKJourneyBot.Core.Runtime;
 /// </summary>
 public sealed class BotApi : IBotApi
 {
-    private static readonly TimeSpan DefaultPollInterval = TimeSpan.FromMilliseconds(750);
+    private static readonly TimeSpan DefaultPollInterval = TimeSpan.FromMilliseconds(100);
     private static readonly TimeSpan PopupPostTapDelay = TimeSpan.FromMilliseconds(2000);
     private static readonly string[] PopupTemplateNames =
     [
@@ -34,7 +34,7 @@ public sealed class BotApi : IBotApi
     }
 
 
-    public async Task<ScreenPoint?> FindTemplateAsync(string relativeTemplatePath, CancellationToken ct, double threshold = 0.92)
+    public async Task<ScreenPoint?> FindTemplateAsync(string relativeTemplatePath, CancellationToken ct, double threshold = 0.99)
     {
         await EnsureNotPausedAsync(ct);
         var screen = await _device.ScreenshotAsync(ct);
@@ -44,9 +44,10 @@ public sealed class BotApi : IBotApi
     public async Task<ScreenPoint?> WaitForTemplateAsync(
         string relativeTemplatePath,
         CancellationToken ct,
-        double threshold = 0.92,
+        double threshold = 0.99,
         TimeSpan? timeout = null,
-        TimeSpan? pollInterval = null)
+        TimeSpan? pollInterval = null,
+        bool errorOnFail = true)
     {
         pollInterval ??= DefaultPollInterval;
         timeout ??= TimeSpan.FromSeconds(60);
@@ -68,10 +69,13 @@ public sealed class BotApi : IBotApi
 
             if (DateTimeOffset.UtcNow - start >= timeout.Value)
             {
-                var debugPath = await TrySaveDebugScreenshotAsync(screen, relativeTemplatePath, ct);
-                Log.Error(
-                    "Timed out while searching for template {TemplatePath}. There may be an unhandled popup. Debug image saved to {DebugImagePath}",
-                    relativeTemplatePath, debugPath ?? "COULD_NOT_SAVE_IMAGE");
+                if (errorOnFail)
+                {
+                    var debugPath = await TrySaveDebugScreenshotAsync(screen, relativeTemplatePath, ct);
+                    Log.Error(
+                        "Timed out while searching for template {TemplatePath}. There may be an unhandled popup. Debug image saved to {DebugImagePath}",
+                        relativeTemplatePath, debugPath ?? "COULD_NOT_SAVE_IMAGE");
+                }
                 return null;
             }
 
@@ -162,11 +166,11 @@ public sealed class BotApi : IBotApi
         return await _ocr.ReadTextAsync(screen, roi, ct);
     }
 
-    public async Task<RgbColor> GetPixelAsync(int x, int y, CancellationToken ct)
+    public async Task<RgbColor> GetPixelAsync(ScreenPoint point, CancellationToken ct)
     {
         await EnsureNotPausedAsync(ct);
         var screen = await _device.ScreenshotAsync(ct);
-        return _vision.GetPixel(screen, x, y);
+        return _vision.GetPixel(screen, point.X, point.Y);
     }
 
 
