@@ -41,7 +41,7 @@ public partial class App : Application
         }
 
         var config = AppConfig.Load();
-        var device = new AdbDeviceController(Log.Warning);
+        var device = new AdbDeviceController(Log.Warning, config.DeviceSerial);
         var vision = new VisionService();
         _ocr = new TesseractOcrService();
         var pauseGate = new AsyncManualResetEvent(true);
@@ -56,7 +56,7 @@ public partial class App : Application
             new(HomesteadOrders.TaskName, () => new HomesteadOrders(api))
         };
 
-        _viewModel = new MainViewModel(taskManager, device, tasks, config.PreviewIntervalMs);
+        _viewModel = new MainViewModel(taskManager, tasks);
         var window = new MainWindow
         {
             DataContext = _viewModel

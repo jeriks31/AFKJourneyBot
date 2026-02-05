@@ -5,7 +5,6 @@ namespace AFKJourneyBot.Device;
 
 public interface IDeviceController
 {
-    ScreenFrame? MostRecentScreenFrame { get; }
     Task<ScreenFrame> ScreenshotAsync(CancellationToken ct);
     Task TapAsync(int x, int y, CancellationToken ct);
     Task SwipeAsync(ScreenPoint start, ScreenPoint end, int durationMs, CancellationToken ct);
@@ -19,12 +18,12 @@ public sealed class AdbDeviceController : IDeviceController
     private string? _deviceSerial;
     private readonly Action<string> _warningLogger;
     private static readonly TimeSpan CommandTimeout = TimeSpan.FromSeconds(15);
-    public ScreenFrame? MostRecentScreenFrame { get; private set; }
 
-    public AdbDeviceController(Action<string> warningLogger)
+    public AdbDeviceController(Action<string> warningLogger, string? deviceSerial = null)
     {
         _adbPath = PlatformToolsBootstrapper.AdbPath;
         _warningLogger = warningLogger;
+        _deviceSerial = string.IsNullOrWhiteSpace(deviceSerial) ? null : deviceSerial;
     }
 
     public async Task<ScreenFrame> ScreenshotAsync(CancellationToken ct)
@@ -32,7 +31,6 @@ public sealed class AdbDeviceController : IDeviceController
         await EnsureDeviceSelectedAsync(ct);
         var pngBytes = await RunAdbForBinaryOutputAsync(BuildArgs("exec-out screencap -p"), ct);
         var screenFrame = new ScreenFrame(pngBytes, DateTimeOffset.UtcNow);
-        MostRecentScreenFrame = screenFrame;
         return screenFrame;
     }
 
@@ -160,7 +158,8 @@ public sealed class AdbDeviceController : IDeviceController
         _deviceSerial = devices[0];
         if (devices.Count > 1)
         {
-            _warningLogger.Invoke($"Multiple devices detected. Using {_deviceSerial}.");
+            _warningLogger.Invoke(
+                $"Multiple devices detected. Using {_deviceSerial}. Use config.json to override if needed");
         }
     }
 

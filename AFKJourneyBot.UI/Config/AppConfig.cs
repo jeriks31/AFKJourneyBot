@@ -7,7 +7,6 @@ namespace AFKJourneyBot.UI.Config;
 public sealed class AppConfig
 {
     public string? DeviceSerial { get; set; }
-    public int PreviewIntervalMs { get; set; } = 200;
 
     public static AppConfig Load(string? configPath = null)
     {
