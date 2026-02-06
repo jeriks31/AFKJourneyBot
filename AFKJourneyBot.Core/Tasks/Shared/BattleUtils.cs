@@ -33,25 +33,34 @@ public static class BattleUtils
             var recordsButton = await botApi.WaitForTemplateAsync("afk_stages/records.png", ct);
             if (formationIndex != previousFormationIndex)
             {
-                Log.Information("Copying Formation #{FormationNumber}", formationIndex + 1);
-
                 await botApi.TapAsync(recordsButton!.Value, ct);
 
+                var nextFormationButton = await botApi.WaitForTemplateAsync("afk_stages/next_formation.png", ct);
                 for (var i = 0; i < formationIndex; i++)
                 {
-                    var nextFormationButton =
-                        await botApi.WaitForTemplateAsync("afk_stages/next_formation.png", ct);
                     await botApi.TapAsync(nextFormationButton!.Value, ct);
+                    await Task.Delay(500, ct);
+                    if (await botApi.FindTemplateAsync("afk_stages/not_owned.png", ct, threshold: 0.95) is not null)
+                    {
+                        Log.Debug("Hero not owned, skipping");
+                        formationIndex++;
+                    }
+                }
+
+                if (formationIndex+1 > formationsToTry)
+                {
+                    break; // Happens when "Hero not owned" occurs on the last formation
                 }
 
                 var copyFormationButton =
                     await botApi.WaitForTemplateAsync("afk_stages/copy_formation.png", ct);
                 await botApi.TapAsync(copyFormationButton!.Value, ct);
+                Log.Information("Copied Formation #{FormationNumber}", formationIndex + 1);
                 previousFormationIndex = formationIndex;
             }
 
             // Tap Battle
-            var battleButton = await botApi.WaitForTemplateAsync("afk_stages/start_battle.png", ct);
+            var battleButton = await botApi.WaitForTemplateAsync("afk_stages/start_battle.png", ct, threshold: 0.95);
             Log.Information("Starting Battle #{BattleAttemptNumber}", defeatsOnCurrentStage + 1);
             await botApi.TapAsync(battleButton!.Value, ct);
 
