@@ -70,6 +70,7 @@ public class HomesteadOrders(IBotApi botApi) : IBotTask
                         break;
                     }
                     await botApi.TapAsync(itemPoint.Value, ct);
+                    await Task.Delay(500, ct);
                     
                     // Increase craft amount to x5
                     /*while (await botApi.FindTemplateAsync("homestead/x5.png", ct) is null)
@@ -78,12 +79,13 @@ public class HomesteadOrders(IBotApi botApi) : IBotTask
                         await Task.Delay(500, ct);
                     }*/
 
-                    //Log.Information("Crafting item x5");
-                    //await botApi.TapAsync(new ScreenPoint(540, 1715), ct);
-                    //await WaitForCraftingToFinish(botApi, ct);
+                    if ((await botApi.GetPixelAsync(new ScreenPoint(335, 1725), ct)).G < 175)
+                    {
+                        // Enable auto
+                        await botApi.TapAsync(new ScreenPoint(335, 1725), ct);
+                    }
                     while (!outOfStamina) // Until we get the "Go to requests" popup, craft the same item on loop
                     {
-                        await Task.Delay(500, ct);
                         if (await botApi.GetPixelAsync(new ScreenPoint(623, 1737), ct) == new RgbColor(107, 107, 107))
                         {
                             Log.Information("Out of stamina");
