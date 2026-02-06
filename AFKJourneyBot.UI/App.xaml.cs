@@ -63,6 +63,8 @@ public partial class App : Application
         };
 
         window.Show();
+
+        _ = UpdateChecker.CheckForUpdateAsync(window);
     }
 
     protected override void OnExit(ExitEventArgs e)
@@ -83,6 +85,7 @@ public partial class App : Application
 
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Debug()
+            .WriteTo.Console()
             .WriteTo.File(
                 Path.Combine(logDirectory, "afkjourneybot-.log"),
                 rollingInterval: RollingInterval.Day,
@@ -90,6 +93,6 @@ public partial class App : Application
             .WriteTo.Sink(new UiLogSink())
             .CreateLogger();
 
-        Log.Information("Logger initialized");
+        Log.Debug("Logger initialized");
     }
 }

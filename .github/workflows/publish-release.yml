@@ -24,6 +24,8 @@ jobs:
 
       - name: Publish
         run: |
+          $tag = "${{ github.ref_name }}"
+          $version = $tag.TrimStart('v')
           dotnet publish AFKJourneyBot.UI/AFKJourneyBot.UI.csproj `
             -c Release `
             -r win-x64 `
@@ -31,6 +33,8 @@ jobs:
             -p:PublishSingleFile=true `
             -p:IncludeNativeLibrariesForSelfExtract=true `
             -p:EnableCompressionInSingleFile=true `
+            -p:Version=$version `
+            -p:AssemblyInformationalVersion=$tag `
             -o publish\win-x64
 
       - name: Zip
@@ -38,9 +42,23 @@ jobs:
           Compress-Archive -Path publish\win-x64\* `
             -DestinationPath AFKJourneyBot-win-x64.zip
 
+      - name: Create latest.json
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $version = $tag.TrimStart('v')
+          $releaseUrl = "https://github.com/${{ github.repository }}/releases/tag/$tag"
+          $downloadUrl = "https://github.com/${{ github.repository }}/releases/download/$tag/AFKJourneyBot-win-x64.zip"
+          $payload = @{
+            version = $version
+            release_url = $releaseUrl
+            download_url = $downloadUrl
+          } | ConvertTo-Json -Depth 3
+          $payload | Out-File -FilePath latest.json -Encoding utf8
+
       - name: Create GitHub Release and upload assets
         uses: softprops/action-gh-release@v2
         with:
           files: |
             AFKJourneyBot-win-x64.zip
+            latest.json
           generate_release_notes: true
