@@ -20,7 +20,12 @@ public static class UpdateChecker
 
     public static async Task CheckForUpdateAsync(Window owner)
     {
-        var currentVersion = GetCurrentVersion();
+#if DEBUG
+        Log.Debug("Update check skipped in Debug builds.");
+        return;
+#endif
+
+        var currentVersion = Assembly.GetExecutingAssembly().GetName().Version;
         if (currentVersion is null)
         {
             Log.Debug("Update check skipped because current version is unavailable.");
@@ -70,8 +75,6 @@ public static class UpdateChecker
             }
         });
     }
-
-    private static Version? GetCurrentVersion() => Assembly.GetExecutingAssembly().GetName().Version;
 
     private static bool ShowUpdatePrompt(Window owner, string message)
     {
