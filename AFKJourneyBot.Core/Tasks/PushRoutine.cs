@@ -14,8 +14,6 @@ public sealed class PushRoutine(IBotApi botApi) : IBotTask
         var afkTask = new PushAfkStages(botApi);
         var legendTrialTask = new LegendTrial(botApi);
 
-        Log.Information("Starting routine: {RoutineName}", TaskName);
-
         while (!ct.IsCancellationRequested)
         {
             await legendTrialTask.RunAsync(ct);

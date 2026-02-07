@@ -23,11 +23,12 @@ public static class BattleUtils
         int attemptsPerFormation,
         int formationsToTry)
     {
+        var maxAttempts = attemptsPerFormation * formationsToTry;
         var totalBattleCount = 0;
         var victoryCount = 0;
         var defeatsOnCurrentStage = 0;
         var previousFormationIndex = -1;
-        while (defeatsOnCurrentStage < attemptsPerFormation * formationsToTry)
+        while (defeatsOnCurrentStage < maxAttempts)
         {
             var formationIndex = defeatsOnCurrentStage / attemptsPerFormation;
             var recordsButton = await botApi.WaitForTemplateAsync("afk_stages/records.png", ct);
@@ -40,9 +41,10 @@ public static class BattleUtils
                 {
                     await botApi.TapAsync(nextFormationButton!.Value, ct);
                     await Task.Delay(500, ct);
-                    if (await botApi.FindTemplateAsync("afk_stages/not_owned.png", ct, threshold: 0.95) is not null)
+                    if (await botApi.FindTemplateAsync("afk_stages/not_owned.png", ct, threshold: 0.9) is not null)
                     {
-                        Log.Debug("Hero not owned, skipping");
+                        Log.Debug("Hero/Artifact not owned, skipping");
+                        maxAttempts -= attemptsPerFormation;
                         formationIndex++;
                     }
                 }
@@ -55,14 +57,15 @@ public static class BattleUtils
                 var copyFormationButton =
                     await botApi.WaitForTemplateAsync("afk_stages/copy_formation.png", ct);
                 await botApi.TapAsync(copyFormationButton!.Value, ct);
-                Log.Information("Copied Formation #{FormationNumber}", formationIndex + 1);
+                Log.Information("Copied formation #{FormationNumber}", formationIndex + 1);
                 previousFormationIndex = formationIndex;
             }
 
             // Tap Battle
             var battleButton = await botApi.WaitForTemplateAsync("afk_stages/start_battle.png", ct, threshold: 0.95);
-            Log.Information("Starting Battle #{BattleAttemptNumber}", defeatsOnCurrentStage + 1);
             await botApi.TapAsync(battleButton!.Value, ct);
+            Log.Information("Started battle #{BattleAttemptNumber}/{MaxAttempts}", defeatsOnCurrentStage + 1,
+                maxAttempts);
 
             // Poll for battle defeat or victory screen
             var match = await botApi.WaitForAnyTemplateAsync(
