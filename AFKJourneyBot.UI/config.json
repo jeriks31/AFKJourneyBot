@@ -1,3 +1,15 @@
 {
-  "DeviceSerial": ""
+  "DeviceSerial": null,
+  "LegendTrial": {
+    "AttemptsPerFormation": 1,
+    "FormationsToTry": 10
+  },
+  "PushAfkStages": {
+    "AttemptsPerFormation": 1,
+    "FormationsToTry": 10
+  },
+  "PushSeasonAfkStages": {
+    "AttemptsPerFormation": 1,
+    "FormationsToTry": 10
+  }
 }

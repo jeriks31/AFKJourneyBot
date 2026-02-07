@@ -5,7 +5,7 @@ using Serilog;
 
 namespace AFKJourneyBot.Core.Tasks;
 
-public class LegendTrial(IBotApi botApi) : IBotTask
+public class LegendTrial(IBotApi botApi, AppConfig config) : IBotTask
 {
     // The "Go!" buttons in the "Legend Trial" screen
     private static readonly ScreenPoint Lightbearer = new(896, 616);
@@ -13,10 +13,9 @@ public class LegendTrial(IBotApi botApi) : IBotTask
     private static readonly ScreenPoint Graveborn = new(930, 1190);
     private static readonly ScreenPoint Mauler = new(890, 1450);
 
-    private const int AttemptsPerFormation = 3; // TODO: Make configurable
-    private const int FormationsToTry = 10; // TODO: Make configurable
     public static string TaskName => "Legend Trial";
     public string Name => TaskName;
+    private readonly AppConfig.BattleTaskConfig _config = config.LegendTrial!;
 
     public async Task RunAsync(CancellationToken ct)
     {
@@ -60,7 +59,7 @@ public class LegendTrial(IBotApi botApi) : IBotTask
         Log.Information("Finished all available legend trials");
     }
 
-    private async Task<BattleStagesPushResult> DoTower(string towerName, CancellationToken ct)
+    private async Task DoTower(string towerName, CancellationToken ct)
     {
         var challenge = await botApi.WaitForAnyTemplateAsync(
         [
@@ -70,7 +69,11 @@ public class LegendTrial(IBotApi botApi) : IBotTask
             new TemplateWait("legend_trial/challenge_4.png", "Challenge")
         ], ct);
         await botApi.TapAsync(challenge!.Value.Point, ct);
-        var results = await BattleUtils.PushBattleStages(botApi, ct, AttemptsPerFormation, FormationsToTry);
+        var results = await BattleUtils.PushBattleStages(
+            botApi,
+            ct,
+            _config.AttemptsPerFormation,
+            _config.FormationsToTry);
         Log.Information("Finished pushing {TowerName} tower. Pushed {VictoryCount} stages in {BattleCount} battles",
             towerName, results.VictoryCount, results.TotalBattles);
 
@@ -79,7 +82,5 @@ public class LegendTrial(IBotApi botApi) : IBotTask
             await botApi.BackAsync(ct);
             await Task.Delay(2500, ct);
         }
-
-        return results;
     }
 }

@@ -1,10 +1,10 @@
 using System.IO;
 using System.Windows;
+using AFKJourneyBot.Common;
 using AFKJourneyBot.Core.Runtime;
 using AFKJourneyBot.Core.Tasks;
 using AFKJourneyBot.Device;
 using AFKJourneyBot.Vision;
-using AFKJourneyBot.UI.Config;
 using AFKJourneyBot.UI.Logging;
 using Serilog;
 
@@ -41,6 +41,7 @@ public partial class App : Application
         }
 
         var config = AppConfig.Load();
+        config.ValidateConfig();
         var device = new AdbDeviceController(Log.Warning, config.DeviceSerial);
         var vision = new VisionService();
         _ocr = new TesseractOcrService();
@@ -50,11 +51,14 @@ public partial class App : Application
 
         var tasks = new List<TaskDescriptor>
         {
-            new(PushRoutine.TaskName, () => new PushRoutine(api)),
-            new(PushAfkStages.TaskName, () => new PushAfkStages(api)),
-            new(PushSeasonAfkStages.TaskName, () => new PushSeasonAfkStages(api)),
-            new(LegendTrial.TaskName, () => new LegendTrial(api)),
-            new(HomesteadOrders.TaskName, () => new HomesteadOrders(api))
+            new(PushRoutine.TaskName, () => new PushRoutine(api, config)),
+            new(PushAfkStages.TaskName, () => new PushAfkStages(api, config)),
+            new(PushSeasonAfkStages.TaskName, () => new PushSeasonAfkStages(api, config)),
+            new(LegendTrial.TaskName, () => new LegendTrial(api, config)),
+            new(HomesteadOrders.TaskName, () => new HomesteadOrders(api)),
+#if DEBUG
+            new(DebugTask.TaskName, () => new DebugTask(api)),
+#endif
         };
 
         _viewModel = new MainViewModel(taskManager, tasks);

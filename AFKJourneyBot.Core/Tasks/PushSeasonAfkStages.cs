@@ -5,11 +5,9 @@ using Serilog;
 
 namespace AFKJourneyBot.Core.Tasks;
 
-public class PushSeasonAfkStages(IBotApi botApi) : IBotTask
+public class PushSeasonAfkStages(IBotApi botApi, AppConfig config) : IBotTask
 {
-    private const int AttemptsPerFormation = 3; // TODO: Make configurable
-    private const int FormationsToTry = 10; // TODO: Make configurable
-
+    private readonly AppConfig.BattleTaskConfig _config = config.PushSeasonAfkStages!;
     public const string TaskName = "Push Season AFK Stages";
     public string Name => TaskName;
 
@@ -24,8 +22,12 @@ public class PushSeasonAfkStages(IBotApi botApi) : IBotTask
         Log.Information("Pushing Season AFK Stages");
         await botApi.TapAsync(new ScreenPoint(300, 1610), ct); // Tap Season AFK Stages
 
-        var results = await BattleUtils.PushBattleStages(botApi, ct, AttemptsPerFormation, FormationsToTry);
-        
+        var results = await BattleUtils.PushBattleStages(
+            botApi,
+            ct,
+            _config.AttemptsPerFormation,
+            _config.FormationsToTry);
+
         Log.Information("Finished pushing Season AFK Stages. Pushed {VictoryCount} stages in {BattleCount} battles",
             results.VictoryCount, results.TotalBattles);
     }
