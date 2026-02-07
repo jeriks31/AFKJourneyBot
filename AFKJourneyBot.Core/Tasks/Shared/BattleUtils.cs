@@ -28,9 +28,10 @@ public static class BattleUtils
         var victoryCount = 0;
         var defeatsOnCurrentStage = 0;
         var previousFormationIndex = -1;
+        var skippedFormations = 0;
         while (defeatsOnCurrentStage < maxAttempts)
         {
-            var formationIndex = defeatsOnCurrentStage / attemptsPerFormation;
+            var formationIndex = defeatsOnCurrentStage / attemptsPerFormation + skippedFormations;
             var recordsButton = await botApi.WaitForTemplateAsync("afk_stages/records.png", ct);
             if (formationIndex != previousFormationIndex)
             {
@@ -45,6 +46,7 @@ public static class BattleUtils
                     {
                         Log.Debug("Hero/Artifact not owned, skipping");
                         maxAttempts -= attemptsPerFormation;
+                        skippedFormations++;
                         formationIndex++;
                     }
                 }
@@ -83,6 +85,7 @@ public static class BattleUtils
                     Log.Information("Victory count: {VictoryCount}", victoryCount);
                     defeatsOnCurrentStage = 0;
                     previousFormationIndex = -1;
+                    skippedFormations = 0;
                     break;
                 case "defeat":
                     defeatsOnCurrentStage++;
