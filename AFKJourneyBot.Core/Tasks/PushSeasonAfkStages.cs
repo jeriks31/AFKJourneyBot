@@ -7,7 +7,7 @@ namespace AFKJourneyBot.Core.Tasks;
 
 public class PushSeasonAfkStages(IBotApi botApi) : IBotTask
 {
-    private const int AttemptsPerFormation = 1; // TODO: Make configurable
+    private const int AttemptsPerFormation = 3; // TODO: Make configurable
     private const int FormationsToTry = 10; // TODO: Make configurable
 
     public const string TaskName = "Push Season AFK Stages";

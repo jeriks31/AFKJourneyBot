@@ -12,11 +12,13 @@ public sealed class PushRoutine(IBotApi botApi) : IBotTask
     {
         var seasonTask = new PushSeasonAfkStages(botApi);
         var afkTask = new PushAfkStages(botApi);
+        var legendTrialTask = new LegendTrial(botApi);
 
         Log.Information("Starting routine: {RoutineName}", TaskName);
 
         while (!ct.IsCancellationRequested)
         {
+            await legendTrialTask.RunAsync(ct);
             await seasonTask.RunAsync(ct);
             await afkTask.RunAsync(ct);
         }

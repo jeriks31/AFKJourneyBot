@@ -47,7 +47,7 @@ public static class BattleUtils
                     }
                 }
 
-                if (formationIndex+1 > formationsToTry)
+                if (formationIndex + 1 > formationsToTry)
                 {
                     break; // Happens when "Hero not owned" occurs on the last formation
                 }
