@@ -13,6 +13,7 @@ public sealed class BotApi : IBotApi
 {
     private static readonly TimeSpan DefaultPollInterval = TimeSpan.FromMilliseconds(100);
     private static readonly TimeSpan PopupPostTapDelay = TimeSpan.FromMilliseconds(2000);
+    private const int MaxRecentScreenshots = 10;
     private static readonly string[] PopupTemplateNames =
     [
         // Add popup button templates here, e.g. "popup_close.png", "popup_ok.png"
@@ -21,6 +22,7 @@ public sealed class BotApi : IBotApi
     private readonly IVisionService _vision;
     private readonly IOcrService _ocr;
     private readonly AsyncManualResetEvent _pauseGate;
+    private readonly Queue<ScreenFrame> _recentScreens = new();
 
     /// <summary>
     /// Creates a bot API backed by device, vision, and OCR services.
@@ -37,7 +39,7 @@ public sealed class BotApi : IBotApi
     public async Task<ScreenPoint?> FindTemplateAsync(string relativeTemplatePath, CancellationToken ct, double threshold = 0.99)
     {
         await EnsureNotPausedAsync(ct);
-        var screen = await _device.ScreenshotAsync(ct);
+        var screen = await CaptureScreenAsync(ct);
         return await _vision.FindTemplateAsync(screen, TemplatePaths.For(relativeTemplatePath), threshold, ct);
     }
 
@@ -56,7 +58,7 @@ public sealed class BotApi : IBotApi
         while (true)
         {
             await EnsureNotPausedAsync(ct);
-            var screen = await _device.ScreenshotAsync(ct);
+            var screen = await CaptureScreenAsync(ct);
             if (await TryHandlePopupAsync(screen, ct))
             {
                 continue;
@@ -71,10 +73,13 @@ public sealed class BotApi : IBotApi
             {
                 if (errorOnFail)
                 {
-                    var debugPath = await TrySaveDebugScreenshotAsync(screen, relativeTemplatePath, ct);
+                    var debugPaths = await TrySaveDebugScreenshotsAsync(_recentScreens.ToArray(), relativeTemplatePath, ct);
                     Log.Error(
-                        "Timed out while searching for template {TemplatePath}. There may be an unhandled popup. Debug image saved to {DebugImagePath}",
-                        relativeTemplatePath, debugPath ?? "COULD_NOT_SAVE_IMAGE");
+                        "Timed out while searching for template {TemplatePath}. There may be an unhandled popup. Saved debug images to {DebugImagePath}",
+                        relativeTemplatePath,
+                        debugPaths == null || debugPaths.Count == 0
+                            ? "COULD_NOT_SAVE_IMAGES"
+                            : Path.GetDirectoryName(debugPaths[0]) ?? "COULD_NOT_SAVE_IMAGES");
                 }
                 return null;
             }
@@ -95,7 +100,7 @@ public sealed class BotApi : IBotApi
         while (true)
         {
             await EnsureNotPausedAsync(ct);
-            var screen = await _device.ScreenshotAsync(ct);
+            var screen = await CaptureScreenAsync(ct);
             if (await TryHandlePopupAsync(screen, ct))
             {
                 continue;
@@ -162,14 +167,14 @@ public sealed class BotApi : IBotApi
     public async Task<string> ReadTextAsync(ScreenRect roi, CancellationToken ct)
     {
         await EnsureNotPausedAsync(ct);
-        var screen = await _device.ScreenshotAsync(ct);
+        var screen = await CaptureScreenAsync(ct);
         return await _ocr.ReadTextAsync(screen, roi, ct);
     }
 
     public async Task<RgbColor> GetPixelAsync(ScreenPoint point, CancellationToken ct)
     {
         await EnsureNotPausedAsync(ct);
-        var screen = await _device.ScreenshotAsync(ct);
+        var screen = await CaptureScreenAsync(ct);
         return _vision.GetPixel(screen, point.X, point.Y);
     }
 
@@ -191,8 +196,24 @@ public sealed class BotApi : IBotApi
         await action();
     }
 
-    private static async Task<string?> TrySaveDebugScreenshotAsync(
-        ScreenFrame screen,
+    private async Task<ScreenFrame> CaptureScreenAsync(CancellationToken ct)
+    {
+        var screen = await _device.ScreenshotAsync(ct);
+        RecordRecentScreenshot(screen);
+        return screen;
+    }
+
+    private void RecordRecentScreenshot(ScreenFrame screen)
+    {
+        while (_recentScreens.Count >= MaxRecentScreenshots)
+        {
+            _recentScreens.Dequeue();
+        }
+        _recentScreens.Enqueue(screen);
+    }
+
+    private static async Task<IReadOnlyList<string>?> TrySaveDebugScreenshotsAsync(
+        IReadOnlyList<ScreenFrame> screens,
         string templatePath,
         CancellationToken ct)
     {
@@ -203,16 +224,23 @@ public sealed class BotApi : IBotApi
 
             var baseName = Path.GetFileNameWithoutExtension(templatePath);
 
-            var timestamp = DateTimeOffset.UtcNow.ToString("yyyyMMdd_HHmmss_fff");
-            var fileName = $"{timestamp}_{baseName}.png";
-            var fullPath = Path.Combine(folder, fileName);
+            var savedPaths = new List<string>(screens.Count);
+            for (var index = 0; index < screens.Count; index++)
+            {
+                var screen = screens[index];
+                var timestamp = screen.CapturedAtUtc.ToString("yyyyMMdd_HHmmss_fff");
+                var fileName = $"{timestamp}_{baseName}_{index:D2}.png";
+                var fullPath = Path.Combine(folder, fileName);
 
-            await File.WriteAllBytesAsync(fullPath, screen.PngBytes, ct);
-            return fullPath;
+                await File.WriteAllBytesAsync(fullPath, screen.PngBytes, ct);
+                savedPaths.Add(fullPath);
+            }
+
+            return savedPaths;
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Failed to save debug screenshot.");
+            Log.Error(ex, "Failed to save debug screenshots.");
             return null;
         }
     }
