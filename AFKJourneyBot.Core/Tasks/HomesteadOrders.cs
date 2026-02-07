@@ -7,6 +7,7 @@ namespace AFKJourneyBot.Core.Tasks;
 
 public class HomesteadOrders(IBotApi botApi) : IBotTask
 {
+    private const bool CraftMultiplier5 = true; // TODO: Make configurable
     private static readonly ProductionBuilding[] ProductionBuildingTemplates =
     [
         new("Kitchen", "homestead/kitchen.png", "homestead/enter_kitchen.png"),
@@ -32,14 +33,6 @@ public class HomesteadOrders(IBotApi botApi) : IBotTask
             // Loop through production buildings
             foreach (var productionBuilding in ProductionBuildingTemplates)
             {
-                if (outOfStamina)
-                {
-                    await botApi.BackAsync(ct);
-                    await Task.Delay(500, ct);
-                    await botApi.BackAsync(ct);
-                    break;
-                }
-                
                 Log.Information("Navigating to {Building}", productionBuilding.Name);
                 await WaitAndTap("homestead/overview.png", botApi, ct);
                 await WaitAndTap("homestead/buildings.png", botApi, ct);
@@ -72,12 +65,14 @@ public class HomesteadOrders(IBotApi botApi) : IBotTask
                     await botApi.TapAsync(itemPoint.Value, ct);
                     await Task.Delay(500, ct);
                     
-                    // Increase craft amount to x5
-                    /*while (await botApi.FindTemplateAsync("homestead/x5.png", ct) is null)
+                    if (CraftMultiplier5)
                     {
-                        await botApi.TapAsync(new ScreenPoint(785, 1690), ct);
-                        await Task.Delay(500, ct);
-                    }*/
+                        while (await botApi.FindTemplateAsync("homestead/x5.png", ct) is null)
+                        {
+                            await botApi.TapAsync(new ScreenPoint(785, 1690), ct);
+                            await Task.Delay(500, ct);
+                        }
+                    }
 
                     if ((await botApi.GetPixelAsync(new ScreenPoint(335, 1725), ct)).G < 175)
                     {
@@ -103,9 +98,17 @@ public class HomesteadOrders(IBotApi botApi) : IBotTask
                             break;
                         }
                         await WaitForCraftingToFinish(botApi, ct);
-                        Log.Information("Crafted item x5");
-                        itemsCrafted += 5;
+                        Log.Information("Crafted item");
+                        itemsCrafted += CraftMultiplier5 ? 5 : 1;
                     }
+                }
+                
+                if (outOfStamina)
+                {
+                    await botApi.BackAsync(ct);
+                    await Task.Delay(1000, ct);
+                    await botApi.BackAsync(ct);
+                    break;
                 }
             }
         
