@@ -20,11 +20,7 @@ public class HomesteadOrders(IBotApi botApi) : IBotTask
 
     public async Task RunAsync(CancellationToken ct)
     {
-        await NavigationUtils.EnsureMainViewAsync(botApi, ct);
-
-        Log.Information("Entering Homestead");
-        await botApi.TapAsync(new ScreenPoint(1010, 1620), ct);
-
+        await NavigationUtils.EnsureMainViewHomesteadAsync(botApi, ct);
 
         var outOfStamina = false;
         var itemsCrafted = 0;
