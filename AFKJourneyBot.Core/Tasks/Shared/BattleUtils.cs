@@ -23,10 +23,12 @@ public static class BattleUtils
         int attemptsPerFormation,
         int formationsToTry)
     {
-        var maxAttempts = attemptsPerFormation * formationsToTry;
+        // Counters
         var totalBattleCount = 0;
         var victoryCount = 0;
         var defeatsOnCurrentStage = 0;
+
+        var maxAttempts = attemptsPerFormation * formationsToTry;
         var previousFormationIndex = -1;
         var skippedFormations = 0;
         while (defeatsOnCurrentStage < maxAttempts)
@@ -37,18 +39,24 @@ public static class BattleUtils
             {
                 await botApi.TapAsync(recordsButton!.Value, ct);
 
+                // Tap next until we reach the desired formation
                 var nextFormationButton = await botApi.WaitForTemplateAsync("afk_stages/next_formation.png", ct);
                 for (var i = 0; i < formationIndex; i++)
                 {
                     await botApi.TapAsync(nextFormationButton!.Value, ct);
                     await Task.Delay(500, ct);
-                    if (await botApi.FindTemplateAsync("afk_stages/not_owned.png", ct, threshold: 0.9) is not null)
-                    {
-                        Log.Debug("Hero/Artifact not owned, skipping");
-                        maxAttempts -= attemptsPerFormation;
-                        skippedFormations++;
-                        formationIndex++;
-                    }
+                }
+
+                // Continue tapping next if formation contains not-owned hero/artifact
+                while (formationIndex < formationsToTry &&
+                       await botApi.FindTemplateAsync("afk_stages/not_owned.png", ct) is not null)
+                {
+                    Log.Debug("Hero/Artifact not owned, skipping");
+                    maxAttempts -= attemptsPerFormation;
+                    skippedFormations++;
+                    formationIndex++;
+                    await botApi.TapAsync(nextFormationButton!.Value, ct);
+                    await Task.Delay(500, ct);
                 }
 
                 if (formationIndex + 1 > formationsToTry)
@@ -56,8 +64,7 @@ public static class BattleUtils
                     break; // Happens when "Hero not owned" occurs on the last formation
                 }
 
-                var copyFormationButton =
-                    await botApi.WaitForTemplateAsync("afk_stages/copy_formation.png", ct);
+                var copyFormationButton = await botApi.WaitForTemplateAsync("afk_stages/copy_formation.png", ct);
                 await botApi.TapAsync(copyFormationButton!.Value, ct);
                 Log.Information("Copied formation #{FormationNumber}", formationIndex + 1);
                 previousFormationIndex = formationIndex;
