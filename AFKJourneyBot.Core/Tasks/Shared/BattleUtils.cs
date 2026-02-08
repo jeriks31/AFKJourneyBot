@@ -28,11 +28,16 @@ public static class BattleUtils
         var victoryCount = 0;
         var defeatsOnCurrentStage = 0;
 
-        var maxAttempts = attemptsPerFormation * formationsToTry;
         var previousFormationIndex = -1;
         var skippedFormations = 0;
-        while (defeatsOnCurrentStage < maxAttempts)
+        while (true)
         {
+            var maxAttempts = attemptsPerFormation * (formationsToTry - skippedFormations);
+            if (defeatsOnCurrentStage >= maxAttempts)
+            {
+                break;
+            }
+
             var formationIndex = defeatsOnCurrentStage / attemptsPerFormation + skippedFormations;
             var recordsButton = await botApi.WaitForTemplateAsync("afk_stages/records.png", ct);
             if (formationIndex != previousFormationIndex)
@@ -49,10 +54,9 @@ public static class BattleUtils
 
                 // Continue tapping next if formation contains not-owned hero/artifact
                 while (formationIndex < formationsToTry &&
-                       await botApi.FindTemplateAsync("afk_stages/not_owned.png", ct) is not null)
+                       await botApi.FindTemplateAsync("afk_stages/not_owned.png", ct, threshold: 0.9) is not null)
                 {
                     Log.Debug("Hero/Artifact not owned, skipping");
-                    maxAttempts -= attemptsPerFormation;
                     skippedFormations++;
                     formationIndex++;
                     await botApi.TapAsync(nextFormationButton!.Value, ct);

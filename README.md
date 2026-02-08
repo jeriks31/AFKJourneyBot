@@ -7,7 +7,7 @@ Automates common AFK Journey actions by driving an Android emulator via ADB and 
 1) Install an Android emulator with ADB support (MuMuPlayer, BlueStacks, etc.).
 2) Enable ADB in the emulator settings if required.
 3) Install and log in to AFK Journey on the emulator.
-4) Download the latest GitHub release and run `AFKJourneyBot.UI`.
+4) Download the latest GitHub release and run `AFKJourneyBot.UI.exe`.
 
 ## Contribute / develop
 

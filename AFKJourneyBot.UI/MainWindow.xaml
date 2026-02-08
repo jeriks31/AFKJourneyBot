@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:AFKJourneyBot.UI"
         mc:Ignorable="d"
         Title="AFK Journey Bot"
+        Icon="Assets/app.ico"
         Height="720"
         Width="480"
         Background="{StaticResource Brush.WindowBackground}">
