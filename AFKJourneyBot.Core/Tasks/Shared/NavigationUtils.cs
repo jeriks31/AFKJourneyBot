@@ -47,7 +47,7 @@ public static class NavigationUtils
     }
 
     private static async Task BackUntilOut(IBotApi botApi, CancellationToken ct, int maxBacks = 10,
-        int delayMs = 1000)
+        int delayMs = 2000)
     {
         for (var i = 0; i < maxBacks; i++)
         {

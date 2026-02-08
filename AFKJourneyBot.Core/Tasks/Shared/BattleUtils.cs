@@ -56,10 +56,11 @@ public static class BattleUtils
                 while (formationIndex < formationsToTry &&
                        await botApi.FindTemplateAsync("afk_stages/not_owned.png", ct, threshold: 0.9) is not null)
                 {
-                    Log.Debug("Hero/Artifact not owned, skipping");
+                    await botApi.TapAsync(nextFormationButton!.Value, ct);
+                    Log.Information("Skipped formation #{FormationNumber}, hero/artifact not owned", formationIndex + 1);
                     skippedFormations++;
                     formationIndex++;
-                    await botApi.TapAsync(nextFormationButton!.Value, ct);
+                    maxAttempts = attemptsPerFormation * (formationsToTry - skippedFormations);
                     await Task.Delay(500, ct);
                 }
 
