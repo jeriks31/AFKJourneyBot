@@ -18,3 +18,5 @@ artifacts/
 *.snupkg
 *.log
 debug_screenshots/
+/.dotnet
+/.dotnet_home

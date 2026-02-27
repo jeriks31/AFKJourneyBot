@@ -17,6 +17,11 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\AFKJourneyBot.Common\AFKJourneyBot.Common.csproj" />
+        <ProjectReference Include="..\AFKJourneyBot.Core\AFKJourneyBot.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
         <Using Include="NUnit.Framework"/>
     </ItemGroup>
 

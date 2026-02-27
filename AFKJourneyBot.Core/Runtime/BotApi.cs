@@ -3,6 +3,7 @@ using AFKJourneyBot.Core.Definitions;
 using AFKJourneyBot.Device;
 using AFKJourneyBot.Vision;
 using Serilog;
+using System.Text;
 
 namespace AFKJourneyBot.Core.Runtime;
 
@@ -36,7 +37,7 @@ public sealed class BotApi : IBotApi
     }
 
 
-    public async Task<ScreenPoint?> FindTemplateAsync(string relativeTemplatePath, CancellationToken ct, double threshold = 0.90)
+    public async Task<ScreenPoint?> FindTemplateAsync(string relativeTemplatePath, CancellationToken ct, double threshold)
     {
         await EnsureNotPausedAsync(ct);
         var screen = await CaptureScreenAsync(ct);
@@ -46,10 +47,10 @@ public sealed class BotApi : IBotApi
     public async Task<ScreenPoint?> WaitForTemplateAsync(
         string relativeTemplatePath,
         CancellationToken ct,
-        double threshold = 0.90,
-        TimeSpan? timeout = null,
-        TimeSpan? pollInterval = null,
-        bool errorOnFail = true)
+        double threshold,
+        TimeSpan? timeout,
+        TimeSpan? pollInterval,
+        bool errorOnFail)
     {
         pollInterval ??= DefaultPollInterval;
         timeout ??= TimeSpan.FromSeconds(60);
@@ -219,7 +220,7 @@ public sealed class BotApi : IBotApi
     {
         try
         {
-            var folder = Path.Combine(AppContext.BaseDirectory, "debug_screenshots");
+            var folder = GetDebugScreenshotFolder();
             Directory.CreateDirectory(folder);
 
             var baseName = Path.GetFileNameWithoutExtension(templatePath);
@@ -243,5 +244,13 @@ public sealed class BotApi : IBotApi
             Log.Error(ex, "Failed to save debug screenshots.");
             return null;
         }
+    }
+
+    private static string GetDebugScreenshotFolder()
+    {
+        var pictures = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
+        return !string.IsNullOrWhiteSpace(pictures)
+            ? Path.Combine(pictures, "AFKJourneyBot", "debug_screenshots")
+            : Path.Combine(AppContext.BaseDirectory, "debug_screenshots");
     }
 }
