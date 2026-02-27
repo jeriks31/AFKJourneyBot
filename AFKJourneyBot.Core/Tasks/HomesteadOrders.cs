@@ -33,7 +33,7 @@ public class HomesteadOrders(IBotApi botApi) : IBotTask
                 await WaitAndTap("homestead/overview.png", botApi, ct);
                 await WaitAndTap("homestead/buildings.png", botApi, ct);
                 await WaitAndTap("homestead/production.png", botApi, ct);
-                await WaitAndTap(productionBuilding.OverviewButtonTemplate, botApi, ct);
+                await WaitAndTap(productionBuilding.OverviewButtonTemplate, botApi, ct, threshold: 0.99);
                 await WaitAndTap("homestead/go.png", botApi, ct);
                 await WaitAndTap(productionBuilding.EnterBuildingTemplate, botApi, ct);
                 
@@ -79,7 +79,7 @@ public class HomesteadOrders(IBotApi botApi) : IBotTask
                     {
                         if (await botApi.GetPixelAsync(new ScreenPoint(623, 1737), ct) == new RgbColor(107, 107, 107))
                         {
-                            Log.Information("Out of stamina");
+                            Log.Information("Out of stamina/ingredients");
                             outOfStamina = true;
                             break;
                         }
@@ -87,7 +87,7 @@ public class HomesteadOrders(IBotApi botApi) : IBotTask
                         await Task.Delay(1500, ct);
                         if (await botApi.FindTemplateAsync("homestead/go_to_requests.png", ct) is not null)
                         {
-                            Log.Information("Moving on to the next item");
+                            //Log.Information("Moving on to the next item");
                             await botApi.BackAsync(ct);
                             await Task.Delay(500, ct);
                             await botApi.BackAsync(ct);
@@ -114,7 +114,7 @@ public class HomesteadOrders(IBotApi botApi) : IBotTask
             while(true)
             {
                 var deliverableRequest = await botApi.WaitForTemplateAsync("homestead/deliverable_request.png", ct,
-                    timeout: TimeSpan.FromSeconds(5), threshold:0.92d, errorOnFail: false);
+                    timeout: TimeSpan.FromSeconds(5), threshold:0.85, errorOnFail: false);
                 if (deliverableRequest is null)
                 {
                     Log.Information("No more deliverable requests");
@@ -132,7 +132,7 @@ public class HomesteadOrders(IBotApi botApi) : IBotTask
 
             if (outOfStamina)
             {
-                Log.Information("Out of stamina and deliveries, stopping task");
+                Log.Information("Out of stamina/ingredients and deliveries, stopping task");
                 break;
             }
 
@@ -143,9 +143,12 @@ public class HomesteadOrders(IBotApi botApi) : IBotTask
             requestsDelivered);
     }
 
-    private static async Task WaitAndTap(string template, IBotApi botApi, CancellationToken ct)
+    private static async Task WaitAndTap(string template, IBotApi botApi, CancellationToken ct, double? threshold = null)
     {
-        var point = await botApi.WaitForTemplateAsync(template, ct);
+        var point = threshold.HasValue
+            ? await botApi.WaitForTemplateAsync(template, ct, threshold: threshold.Value)
+            : await botApi.WaitForTemplateAsync(template, ct);
+        await Task.Delay(500, ct);
         await botApi.TapAsync(point!.Value, ct);
     }
 

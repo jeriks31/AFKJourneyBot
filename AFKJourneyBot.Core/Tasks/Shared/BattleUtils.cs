@@ -37,6 +37,8 @@ public static class BattleUtils
             {
                 break;
             }
+            
+            //TODO: Check for Daily Limit popup
 
             var formationIndex = defeatsOnCurrentStage / attemptsPerFormation + skippedFormations;
             var recordsButton = await botApi.WaitForTemplateAsync("afk_stages/records.png", ct);

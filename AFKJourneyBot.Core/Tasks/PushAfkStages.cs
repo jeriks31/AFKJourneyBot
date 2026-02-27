@@ -17,7 +17,7 @@ public class PushAfkStages(IBotApi botApi, AppConfig config) : IBotTask
 
         // Enter "AFK Stage" main menu
         await botApi.TapAsync(new ScreenPoint(80, 1850), ct);
-        await Task.Delay(2000, ct);
+        await botApi.WaitForTemplateAsync("afk_stages/enter_afk_stages.png", ct);
 
         Log.Information("Pushing AFK Stages");
         await botApi.TapAsync(new ScreenPoint(800, 1610), ct); // Tap Regular AFK Stages

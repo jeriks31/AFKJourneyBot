@@ -36,7 +36,7 @@ public sealed class BotApi : IBotApi
     }
 
 
-    public async Task<ScreenPoint?> FindTemplateAsync(string relativeTemplatePath, CancellationToken ct, double threshold = 0.99)
+    public async Task<ScreenPoint?> FindTemplateAsync(string relativeTemplatePath, CancellationToken ct, double threshold = 0.90)
     {
         await EnsureNotPausedAsync(ct);
         var screen = await CaptureScreenAsync(ct);
@@ -46,7 +46,7 @@ public sealed class BotApi : IBotApi
     public async Task<ScreenPoint?> WaitForTemplateAsync(
         string relativeTemplatePath,
         CancellationToken ct,
-        double threshold = 0.99,
+        double threshold = 0.90,
         TimeSpan? timeout = null,
         TimeSpan? pollInterval = null,
         bool errorOnFail = true)

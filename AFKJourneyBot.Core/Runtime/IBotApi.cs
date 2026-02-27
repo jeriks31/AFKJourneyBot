@@ -7,14 +7,14 @@ namespace AFKJourneyBot.Core.Runtime;
 /// </summary>
 public interface IBotApi
 {
-    Task<ScreenPoint?> FindTemplateAsync(string relativeTemplatePath, CancellationToken ct, double threshold = 0.99);
+    Task<ScreenPoint?> FindTemplateAsync(string relativeTemplatePath, CancellationToken ct, double threshold = 0.90);
     /// <summary>
     /// Waits until a template is found or a timeout occurs. Accepts a relative template path.
     /// </summary>
     Task<ScreenPoint?> WaitForTemplateAsync(
         string relativeTemplatePath,
         CancellationToken ct,
-        double threshold = 0.99,
+        double threshold = 0.90,
         TimeSpan? timeout = null,
         TimeSpan? pollInterval = null,
         bool errorOnFail = true);
