@@ -52,7 +52,7 @@ public sealed class BotApi : IBotApi
         TimeSpan? pollInterval)
     {
         pollInterval ??= DefaultPollInterval;
-        timeout ??= TimeSpan.FromSeconds(60);
+        timeout ??= TimeSpan.FromSeconds(30);
         var start = DateTimeOffset.UtcNow;
 
         while (true)

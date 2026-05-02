@@ -3,6 +3,10 @@ using System.Net.Http;
 
 namespace AFKJourneyBot.Device;
 
+/// <summary>
+/// Ensures that Android platform-tools (adb) are available by checking for required files and downloading/extracting them if missing.
+/// We COULD include adb in the repo but it's technically not allowed
+/// </summary>
 public static class PlatformToolsBootstrapper
 {
     private const string PlatformToolsFolderName = "platform-tools";

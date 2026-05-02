@@ -35,7 +35,10 @@ public class HomesteadOrders(IBotApi botApi) : IBotTask
                 await WaitAndTap("homestead/production.png", botApi, ct);
                 await WaitAndTap(productionBuilding.OverviewButtonTemplate, botApi, ct, threshold: 0.99);
                 await WaitAndTap("homestead/go.png", botApi, ct);
-                await WaitAndTap(productionBuilding.EnterBuildingTemplate, botApi, ct);
+                if (!await TryEnterBuilding(productionBuilding, botApi, ct))
+                {
+                    continue;
+                }
                 
                 while (!outOfStamina) // Within one production building, loop until there are no more 'Requested' labels
                 {
@@ -154,17 +157,47 @@ public class HomesteadOrders(IBotApi botApi) : IBotTask
         await botApi.TapAsync(point, ct);
     }
 
+    private static async Task<bool> TryEnterBuilding(
+        ProductionBuilding productionBuilding,
+        IBotApi botApi,
+        CancellationToken ct)
+    {
+        try
+        {
+            await WaitAndTap(productionBuilding.EnterBuildingTemplate, botApi, ct);
+            return true;
+        }
+        catch (TemplateWaitTimeoutException ex) when (ex.RelativeTemplatePath == productionBuilding.EnterBuildingTemplate)
+        {
+            Log.Warning(
+                "Could not find enter button for {Building}; skipping to the next production building",
+                productionBuilding.Name);
+            return false;
+        }
+    }
+
     private static async Task WaitForCraftingToFinish(IBotApi botApi, CancellationToken ct)
     {
+        var start = DateTimeOffset.UtcNow;
         // Wait for crafting to start (big button in the lower middle becomes white)
         while (await botApi.GetPixelAsync(new ScreenPoint(600, 1670), ct) != new RgbColor(249, 245, 238))
         {
+            if (DateTimeOffset.UtcNow - start >= TimeSpan.FromSeconds(10))
+            {
+                Log.Warning("Crafting did not start within the expected time");
+                return;
+            }
             await Task.Delay(500, ct);
         }
         
         // Wait for crafting to end (big button stops being white)
         while (await botApi.GetPixelAsync(new ScreenPoint(600, 1670), ct) == new RgbColor(249, 245, 238))
         {
+            if (DateTimeOffset.UtcNow - start >= TimeSpan.FromSeconds(40))
+            {
+                Log.Warning("Crafting did not end within the expected time");
+                return;
+            }
             await Task.Delay(500, ct);
         }
     }
