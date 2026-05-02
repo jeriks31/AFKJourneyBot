@@ -22,10 +22,10 @@ public class LegendTrial(IBotApi botApi, AppConfig config) : IBotTask
         await NavigationUtils.EnsureMainViewAsync(botApi, ct);
 
         var battleModes = await botApi.WaitForTemplateAsync("battle_modes.png", ct);
-        await botApi.TapAsync(battleModes!.Value, ct);
+        await botApi.TapAsync(battleModes, ct);
 
         var legendTrial = await botApi.WaitForTemplateAsync("legend_trial/legend_trial.png", ct);
-        await botApi.TapAsync(legendTrial!.Value, ct);
+        await botApi.TapAsync(legendTrial, ct);
         await Task.Delay(3000, ct);
 
         if ((await botApi.GetPixelAsync(Lightbearer, ct)).R < 230)

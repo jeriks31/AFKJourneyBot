@@ -11,13 +11,12 @@ public interface IBotApi
     /// <summary>
     /// Waits until a template is found or a timeout occurs. Accepts a relative template path.
     /// </summary>
-    Task<ScreenPoint?> WaitForTemplateAsync(
+    Task<ScreenPoint> WaitForTemplateAsync(
         string relativeTemplatePath,
         CancellationToken ct,
         double threshold = 0.90,
         TimeSpan? timeout = null,
-        TimeSpan? pollInterval = null,
-        bool errorOnFail = true);
+        TimeSpan? pollInterval = null);
     /// <summary>
     /// Waits until any of the provided templates is found or a timeout occurs. Accepts relative template paths.
     /// </summary>

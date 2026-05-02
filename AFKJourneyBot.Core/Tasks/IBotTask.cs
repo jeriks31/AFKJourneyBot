@@ -29,10 +29,6 @@ public class ExampleTask(IBotApi botApi) : IBotTask
         await NavigationUtils.EnsureMainViewAsync(botApi, ct);
 
         var location = await botApi.WaitForTemplateAsync("example_template.png", ct);
-
-        if (location is not null)
-        {
-            await botApi.TapAsync(location.Value, ct);
-        }
+        await botApi.TapAsync(location, ct);
     }
 }

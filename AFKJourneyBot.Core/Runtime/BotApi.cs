@@ -44,13 +44,12 @@ public sealed class BotApi : IBotApi
         return await _vision.FindTemplateAsync(screen, TemplatePaths.For(relativeTemplatePath), threshold, ct);
     }
 
-    public async Task<ScreenPoint?> WaitForTemplateAsync(
+    public async Task<ScreenPoint> WaitForTemplateAsync(
         string relativeTemplatePath,
         CancellationToken ct,
         double threshold,
         TimeSpan? timeout,
-        TimeSpan? pollInterval,
-        bool errorOnFail)
+        TimeSpan? pollInterval)
     {
         pollInterval ??= DefaultPollInterval;
         timeout ??= TimeSpan.FromSeconds(60);
@@ -65,24 +64,19 @@ public sealed class BotApi : IBotApi
                 continue;
             }
             var point = await _vision.FindTemplateAsync(screen, TemplatePaths.For(relativeTemplatePath), threshold, ct);
-            if (point != null)
+            if (point is not null)
             {
-                return point;
+                return point.Value;
             }
 
             if (DateTimeOffset.UtcNow - start >= timeout.Value)
             {
-                if (errorOnFail)
-                {
-                    var debugPaths = await TrySaveDebugScreenshotsAsync(_recentScreens.ToArray(), relativeTemplatePath, ct);
-                    Log.Error(
-                        "Timed out while searching for template {TemplatePath}. There may be an unhandled popup. Saved debug images to {DebugImagePath}",
-                        relativeTemplatePath,
-                        debugPaths == null || debugPaths.Count == 0
-                            ? "COULD_NOT_SAVE_IMAGES"
-                            : Path.GetDirectoryName(debugPaths[0]) ?? "COULD_NOT_SAVE_IMAGES");
-                }
-                return null;
+                var debugImgFolder = await TrySaveDebugScreenshotsAsync(_recentScreens.ToArray(), relativeTemplatePath, ct);
+                Log.Error(
+                    "Timed out while searching for template {TemplatePath}. There may be an unhandled popup. Saved debug images to {DebugImagePath}",
+                    relativeTemplatePath,
+                    debugImgFolder ?? "COULD_NOT_SAVE_IMAGES");
+                throw new TemplateWaitTimeoutException(relativeTemplatePath, timeout.Value);
             }
 
             await Task.Delay(pollInterval.Value, ct);
@@ -213,19 +207,18 @@ public sealed class BotApi : IBotApi
         _recentScreens.Enqueue(screen);
     }
 
-    private static async Task<IReadOnlyList<string>?> TrySaveDebugScreenshotsAsync(
+    private static async Task<string?> TrySaveDebugScreenshotsAsync(
         IReadOnlyList<ScreenFrame> screens,
         string templatePath,
         CancellationToken ct)
     {
         try
         {
-            var folder = GetDebugScreenshotFolder();
+            var folder = Path.Combine(AppContext.BaseDirectory, "debug_screenshots");
             Directory.CreateDirectory(folder);
 
             var baseName = Path.GetFileNameWithoutExtension(templatePath);
 
-            var savedPaths = new List<string>(screens.Count);
             for (var index = 0; index < screens.Count; index++)
             {
                 var screen = screens[index];
@@ -234,23 +227,14 @@ public sealed class BotApi : IBotApi
                 var fullPath = Path.Combine(folder, fileName);
 
                 await File.WriteAllBytesAsync(fullPath, screen.PngBytes, ct);
-                savedPaths.Add(fullPath);
             }
 
-            return savedPaths;
+            return folder;
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Failed to save debug screenshots.");
             return null;
         }
-    }
-
-    private static string GetDebugScreenshotFolder()
-    {
-        var pictures = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
-        return !string.IsNullOrWhiteSpace(pictures)
-            ? Path.Combine(pictures, "AFKJourneyBot", "debug_screenshots")
-            : Path.Combine(AppContext.BaseDirectory, "debug_screenshots");
     }
 }

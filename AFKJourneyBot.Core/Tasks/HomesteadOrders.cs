@@ -113,14 +113,16 @@ public class HomesteadOrders(IBotApi botApi) : IBotTask
             await WaitAndTap("homestead/requests.png", botApi, ct);
             while(true)
             {
-                var deliverableRequest = await botApi.WaitForTemplateAsync("homestead/deliverable_request.png", ct,
-                    timeout: TimeSpan.FromSeconds(5), threshold:0.85, errorOnFail: false);
+                var deliverableRequest = await botApi.WaitForAnyTemplateAsync(
+                [
+                    new TemplateWait("homestead/deliverable_request.png", "deliverable", 0.85)
+                ], ct, timeout: TimeSpan.FromSeconds(5));
                 if (deliverableRequest is null)
                 {
                     Log.Information("No more deliverable requests");
                     break;
                 }
-                await botApi.TapAsync(deliverableRequest.Value.Add(-50, 70), ct);
+                await botApi.TapAsync(deliverableRequest.Value.Point.Add(-50, 70), ct);
                 await WaitAndTap("homestead/quick_select.png", botApi, ct);
                 await WaitAndTap("homestead/deliver.png", botApi, ct);
                 await Task.Delay(1000, ct);
@@ -149,7 +151,7 @@ public class HomesteadOrders(IBotApi botApi) : IBotTask
             ? await botApi.WaitForTemplateAsync(template, ct, threshold: threshold.Value)
             : await botApi.WaitForTemplateAsync(template, ct);
         await Task.Delay(500, ct);
-        await botApi.TapAsync(point!.Value, ct);
+        await botApi.TapAsync(point, ct);
     }
 
     private static async Task WaitForCraftingToFinish(IBotApi botApi, CancellationToken ct)

@@ -11,15 +11,14 @@ public sealed class TestBotApi : IBotApi
         return Task.FromResult<ScreenPoint?>(null);
     }
 
-    public Task<ScreenPoint?> WaitForTemplateAsync(
+    public Task<ScreenPoint> WaitForTemplateAsync(
         string relativeTemplatePath,
         CancellationToken ct,
         double threshold = 0.99,
         TimeSpan? timeout = null,
-        TimeSpan? pollInterval = null,
-        bool errorOnFail = true)
+        TimeSpan? pollInterval = null)
     {
-        return Task.FromResult<ScreenPoint?>(null);
+        return Task.FromResult(new ScreenPoint(0, 0));
     }
 
     public Task<TemplateMatch?> WaitForAnyTemplateAsync(
