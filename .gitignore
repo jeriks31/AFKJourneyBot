@@ -20,3 +20,4 @@ artifacts/
 debug_screenshots/
 /.dotnet
 /.dotnet_home
+/.dotnet_cli_home

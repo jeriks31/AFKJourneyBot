@@ -1,13 +1,11 @@
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 using System.Windows.Input;
 using AFKJourneyBot.App.Logging;
 using AFKJourneyBot.Core.Runtime;
 using AFKJourneyBot.Core.Tasks;
+using Avalonia.Threading;
 using Serilog;
 
 namespace AFKJourneyBot.App;
@@ -17,44 +15,67 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     private readonly RelayCommand<TaskDescriptor> _runTaskCommand;
     private readonly RelayCommand _stopCommand;
     private TaskManager? _taskManager;
-    private bool _isRunning;
     private bool _isReady;
-    private bool _hasStartupFailed;
-    private string _statusText = "Starting...";
+    private string _activeTaskName = "None";
+    private string _activeTaskElapsedTime = "00:00:00";
+    private DateTimeOffset? _activeTaskStartedAt;
+    private readonly DispatcherTimer _elapsedTimer;
 
     public MainViewModel()
     {
-        Tasks = new ObservableCollection<TaskDescriptor>();
+        Tasks = [];
 
         _runTaskCommand = new RelayCommand<TaskDescriptor>(RunTask, CanRunTask);
         _stopCommand = new RelayCommand(_ => _taskManager?.Stop(), _ => CanStopTask());
+        _elapsedTimer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromSeconds(1),
+        };
+        _elapsedTimer.Tick += ElapsedTimerTick;
     }
 
     public ObservableCollection<LogEntry> Logs { get; } = LogStore.Entries;
+    // ReSharper disable once MemberCanBePrivate.Global CollectionNeverQueried.Global
     public ObservableCollection<TaskDescriptor> Tasks { get; }
+    // ReSharper disable once UnusedMember.Global
     public ICommand RunTaskCommand => _runTaskCommand;
+    // ReSharper disable once UnusedMember.Global
     public ICommand StopCommand => _stopCommand;
-    public bool IsBusyStarting => !IsReady && !HasStartupFailed;
 
-    public string StatusText
+    public string ActiveTaskName
     {
-        get => _statusText;
+        get => _activeTaskName;
         private set
         {
-            if (value == _statusText)
+            if (value == _activeTaskName)
             {
                 return;
             }
 
-            _statusText = value;
+            _activeTaskName = value;
             OnPropertyChanged();
         }
     }
 
-    public bool IsReady
+    public string ActiveTaskElapsedTime
+    {
+        get => _activeTaskElapsedTime;
+        private set
+        {
+            if (value == _activeTaskElapsedTime)
+            {
+                return;
+            }
+
+            _activeTaskElapsedTime = value;
+            OnPropertyChanged();
+        }
+    }
+
+    private bool IsReady
     {
         get => _isReady;
-        private set
+        set
         {
             if (value == _isReady)
             {
@@ -62,41 +83,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             }
 
             _isReady = value;
-            OnPropertyChanged();
-            OnPropertyChanged(nameof(IsBusyStarting));
             RaiseCommandStatesChanged();
-        }
-    }
-
-    public bool HasStartupFailed
-    {
-        get => _hasStartupFailed;
-        private set
-        {
-            if (value == _hasStartupFailed)
-            {
-                return;
-            }
-
-            _hasStartupFailed = value;
-            OnPropertyChanged();
-            OnPropertyChanged(nameof(IsBusyStarting));
-            RaiseCommandStatesChanged();
-        }
-    }
-
-    public bool IsRunning
-    {
-        get => _isRunning;
-        private set
-        {
-            if (value == _isRunning)
-            {
-                return;
-            }
-
-            _isRunning = value;
-            OnPropertyChanged();
         }
     }
 
@@ -120,8 +107,6 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
                 Tasks.Add(task);
             }
 
-            HasStartupFailed = false;
-            StatusText = "Ready";
             IsReady = true;
             UpdateState();
         });
@@ -131,15 +116,16 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     {
         LogStore.DispatchToUiThread(() =>
         {
-            HasStartupFailed = true;
             IsReady = false;
-            StatusText = "Startup failed";
             LogStore.Add(new LogEntry("Error", $"Startup failed: {startupException.Message}"));
         });
     }
 
     public void Dispose()
     {
+        _elapsedTimer.Stop();
+        _elapsedTimer.Tick -= ElapsedTimerTick;
+
         if (_taskManager != null)
         {
             _taskManager.StateChanged -= TaskManagerStateChanged;
@@ -160,6 +146,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         }
 
         var task = descriptor.CreateTask();
+        StartActiveTask(descriptor.Name);
         _ = _taskManager.RunTaskAsync(task, descriptor.Name).ContinueWith(
             t =>
             {
@@ -191,9 +178,44 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
 
     private void SetState()
     {
-        IsRunning = _taskManager?.IsRunning ?? false;
+        var isRunning = _taskManager?.IsRunning ?? false;
+        if (!isRunning)
+        {
+            StopActiveTask();
+        }
+
         RaiseCommandStatesChanged();
     }
+
+    private void StartActiveTask(string taskName)
+    {
+        ActiveTaskName = taskName;
+        _activeTaskStartedAt = DateTimeOffset.Now;
+        UpdateElapsedTime();
+        _elapsedTimer.Start();
+    }
+
+    private void StopActiveTask()
+    {
+        _elapsedTimer.Stop();
+        _activeTaskStartedAt = null;
+        ActiveTaskName = "None";
+        ActiveTaskElapsedTime = "00:00:00";
+    }
+
+    private void UpdateElapsedTime()
+    {
+        if (_activeTaskStartedAt == null)
+        {
+            ActiveTaskElapsedTime = "00:00:00";
+            return;
+        }
+
+        var elapsed = DateTimeOffset.Now - _activeTaskStartedAt.Value;
+        ActiveTaskElapsedTime = elapsed.ToString(elapsed.TotalDays >= 1 ? @"d\.hh\:mm\:ss" : @"hh\:mm\:ss");
+    }
+
+    private void ElapsedTimerTick(object? sender, EventArgs e) => UpdateElapsedTime();
 
     private void RaiseCommandStatesChanged()
     {

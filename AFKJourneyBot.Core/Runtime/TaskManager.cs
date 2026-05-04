@@ -48,10 +48,10 @@ public sealed class TaskManager
 
         _cts = new CancellationTokenSource();
 
-        OnStateChanged();
         Log.Information("Starting task: {TaskName}", taskName);
 
         _runningTask = Task.Run(() => task.RunAsync(_cts.Token));
+        OnStateChanged();
         try
         {
             await _runningTask;

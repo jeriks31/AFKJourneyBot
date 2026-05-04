@@ -7,16 +7,36 @@
         Height="720"
         MinWidth="380"
         MinHeight="520">
-  <Grid Margin="16" RowDefinitions="*,300" RowSpacing="12">
+  <Grid Margin="16" RowDefinitions="Auto,*,300" RowSpacing="12">
     <Border Grid.Row="0" Classes="panel">
-      <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="10">
-        <TextBlock Grid.Row="0" Classes="section-title" Text="Tasks" />
-        <TextBlock Grid.Row="1"
-                   FontSize="12"
-                   Foreground="#98A2B3"
-                   Text="{Binding StatusText}" />
+      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+        <StackPanel Grid.Column="0" Spacing="2">
+          <TextBlock FontSize="12"
+                     FontWeight="SemiBold"
+                     Foreground="#F4F6F8"
+                     Text="Active task" />
+          <TextBlock FontSize="18"
+                     FontWeight="SemiBold"
+                     Foreground="#E8EAED"
+                     Text="{Binding ActiveTaskName}" />
+          <TextBlock FontSize="12"
+                     Foreground="#98A2B3"
+                     Text="{Binding ActiveTaskElapsedTime, StringFormat='Elapsed: {0}'}" />
+        </StackPanel>
 
-        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+        <Button Grid.Column="1"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Center"
+                Content="Stop"
+                Command="{Binding StopCommand}" />
+      </Grid>
+    </Border>
+
+    <Border Grid.Row="1" Classes="panel">
+      <Grid RowDefinitions="Auto,*" RowSpacing="10">
+        <TextBlock Grid.Row="0" Classes="section-title" Text="Tasks" />
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
           <ItemsControl ItemsSource="{Binding Tasks}">
             <ItemsControl.ItemTemplate>
               <DataTemplate>
@@ -30,15 +50,10 @@
             </ItemsControl.ItemTemplate>
           </ItemsControl>
         </ScrollViewer>
-
-        <Grid Grid.Row="3">
-          <Button Content="Stop"
-                  Command="{Binding StopCommand}" />
-        </Grid>
       </Grid>
     </Border>
 
-    <Border Grid.Row="1" Classes="panel">
+    <Border Grid.Row="2" Classes="panel">
       <Grid RowDefinitions="Auto,*" RowSpacing="8">
         <TextBlock Grid.Row="0" Classes="section-title" Text="Logs" />
 
