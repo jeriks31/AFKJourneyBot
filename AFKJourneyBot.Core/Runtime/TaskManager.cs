@@ -4,21 +4,19 @@ using Serilog;
 namespace AFKJourneyBot.Core.Runtime;
 
 /// <summary>
-/// Runs a single bot task at a time and manages pause/stop state.
+/// Runs a single bot task at a time and manages stop state.
 /// </summary>
 public sealed class TaskManager
 {
-    private readonly AsyncManualResetEvent _pauseGate;
     private CancellationTokenSource? _cts;
     private Task? _runningTask;
 
     /// <summary>
-    /// Creates a task manager with the given bot API and pause gate.
+    /// Creates a task manager with the given bot API.
     /// </summary>
-    public TaskManager(IBotApi api, AsyncManualResetEvent pauseGate)
+    public TaskManager(IBotApi api)
     {
         Api = api;
-        _pauseGate = pauseGate;
     }
 
     /// <summary>
@@ -30,13 +28,9 @@ public sealed class TaskManager
     /// True while a task is running.
     /// </summary>
     public bool IsRunning => _runningTask is { IsCompleted: false };
-    /// <summary>
-    /// True when paused.
-    /// </summary>
-    public bool IsPaused => !_pauseGate.IsSet;
 
     /// <summary>
-    /// Raised when running or pause state changes.
+    /// Raised when running state changes.
     /// </summary>
     public event EventHandler? StateChanged;
 
@@ -51,7 +45,6 @@ public sealed class TaskManager
             throw new InvalidOperationException("A task is already running.");
         }
 
-        _pauseGate.Set();
         _cts = new CancellationTokenSource();
 
         OnStateChanged();
@@ -95,56 +88,6 @@ public sealed class TaskManager
         _cts.Cancel();
         OnStateChanged();
     }
-
-    /// <summary>
-    /// Pauses task execution at the next gate check.
-    /// </summary>
-    public void Pause()
-    {
-        if (IsPaused)
-        {
-            return;
-        }
-
-        Log.Information("Pause requested");
-        _pauseGate.Reset();
-        OnStateChanged();
-    }
-
-    /// <summary>
-    /// Resumes task execution.
-    /// </summary>
-    public void Resume()
-    {
-        if (!IsPaused)
-        {
-            return;
-        }
-
-        Log.Information("Resume requested");
-        _pauseGate.Set();
-        OnStateChanged();
-    }
-
-    /// <summary>
-    /// Toggles between paused and running.
-    /// </summary>
-    public void TogglePause()
-    {
-        if (IsPaused)
-        {
-            Resume();
-        }
-        else
-        {
-            Pause();
-        }
-    }
-
-    /// <summary>
-    /// Exposes the pause gate for low-level coordination.
-    /// </summary>
-    public AsyncManualResetEvent PauseGate => _pauseGate;
 
     /// <summary>
     /// Invokes the state changed event.

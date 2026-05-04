@@ -14,11 +14,9 @@ namespace AFKJourneyBot.App;
 public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
 {
     private readonly RelayCommand<TaskDescriptor> _runTaskCommand;
-    private readonly RelayCommand _pauseCommand;
     private readonly RelayCommand _stopCommand;
     private TaskManager? _taskManager;
     private bool _isRunning;
-    private bool _isPaused;
     private bool _isReady;
     private bool _hasStartupFailed;
     private string _statusText = "Starting...";
@@ -28,16 +26,13 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         Tasks = new ObservableCollection<TaskDescriptor>();
 
         _runTaskCommand = new RelayCommand<TaskDescriptor>(RunTask, CanRunTask);
-        _pauseCommand = new RelayCommand(_ => _taskManager?.TogglePause(), _ => IsReady);
-        _stopCommand = new RelayCommand(_ => _taskManager?.Stop(), _ => IsReady);
+        _stopCommand = new RelayCommand(_ => _taskManager?.Stop(), _ => CanStopTask());
     }
 
     public ObservableCollection<LogEntry> Logs { get; } = LogStore.Entries;
     public ObservableCollection<TaskDescriptor> Tasks { get; }
     public ICommand RunTaskCommand => _runTaskCommand;
-    public ICommand PauseCommand => _pauseCommand;
     public ICommand StopCommand => _stopCommand;
-    public string PauseButtonText => IsPaused ? "Resume" : "Pause";
     public bool IsBusyStarting => !IsReady && !HasStartupFailed;
 
     public string StatusText
@@ -101,22 +96,6 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
 
             _isRunning = value;
             OnPropertyChanged();
-        }
-    }
-
-    public bool IsPaused
-    {
-        get => _isPaused;
-        private set
-        {
-            if (value == _isPaused)
-            {
-                return;
-            }
-
-            _isPaused = value;
-            OnPropertyChanged();
-            OnPropertyChanged(nameof(PauseButtonText));
         }
     }
 
@@ -194,6 +173,9 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     private bool CanRunTask(TaskDescriptor? descriptor)
         => IsReady && descriptor != null && _taskManager is { IsRunning: false };
 
+    private bool CanStopTask()
+        => IsReady && _taskManager is { IsRunning: true };
+
     private void TaskManagerStateChanged(object? sender, EventArgs e) => UpdateState();
 
     private void UpdateState()
@@ -209,14 +191,12 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     private void SetState()
     {
         IsRunning = _taskManager?.IsRunning ?? false;
-        IsPaused = _taskManager?.IsPaused ?? false;
         RaiseCommandStatesChanged();
     }
 
     private void RaiseCommandStatesChanged()
     {
         _runTaskCommand.RaiseCanExecuteChanged();
-        _pauseCommand.RaiseCanExecuteChanged();
         _stopCommand.RaiseCanExecuteChanged();
     }
 

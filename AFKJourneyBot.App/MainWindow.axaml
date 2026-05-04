@@ -23,6 +23,7 @@
                 <Button Margin="0,0,0,8"
                         HorizontalAlignment="Stretch"
                         Content="{Binding Name}"
+                        ToolTip.Tip="{Binding Description}"
                         Command="{Binding $parent[Window].DataContext.RunTaskCommand}"
                         CommandParameter="{Binding}" />
               </DataTemplate>
@@ -30,12 +31,8 @@
           </ItemsControl>
         </ScrollViewer>
 
-        <Grid Grid.Row="3" ColumnDefinitions="*,*" ColumnSpacing="8">
-          <Button Grid.Column="0"
-                  Content="{Binding PauseButtonText}"
-                  Command="{Binding PauseCommand}" />
-          <Button Grid.Column="1"
-                  Content="Stop"
+        <Grid Grid.Row="3">
+          <Button Content="Stop"
                   Command="{Binding StopCommand}" />
         </Grid>
       </Grid>

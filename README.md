@@ -61,8 +61,16 @@ Open `AFKJourneyBot.App/App.axaml.cs` and add a `TaskDescriptor`:
 ```csharp
 var tasks = new List<TaskDescriptor>
 {
-    new(SampleTask.TaskName, () => new SampleTask(api)),
-    new(DailyQuestTask.TaskName, () => new DailyQuestTask(api))
+    new(
+        SampleTask.TaskName,
+        "Short description shown when hovering the task button.",
+        () => new SampleTask(api),
+        "Sample Group"),
+    new(
+        DailyQuestTask.TaskName,
+        "Runs daily quest automation.",
+        () => new DailyQuestTask(api),
+        "Daily")
 };
 ```
 
@@ -77,7 +85,7 @@ Place template images in `AFKJourneyBot.App/templates/`.
 await botApi.WaitForTemplateAsync("afk_stages/records.png", ct);
 ```
 
-### Safety rules (pause/stop)
+### Safety rules
 
 - Use **IBotApi** methods (`TapAsync`, `WaitForTemplateAsync`, `ReadTextAsync`, etc.). Avoid direct ADB/vision calls from tasks.
 - Always pass the **cancellation token** to delays/loops: `await Task.Delay(500, ct);`.

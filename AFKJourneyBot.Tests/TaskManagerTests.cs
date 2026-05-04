@@ -8,23 +8,20 @@ public class TaskManagerTests
     [Test]
     public async Task RunTaskAsync_CompletesAndResetsState()
     {
-        var gate = new AsyncManualResetEvent(set: true);
-        var manager = new TaskManager(new TestBotApi(), gate);
+        var manager = new TaskManager(new TestBotApi());
         var stateChanges = 0;
         manager.StateChanged += (_, _) => stateChanges++;
 
         await manager.RunTaskAsync(new ImmediateTask());
 
         Assert.That(manager.IsRunning, Is.False);
-        Assert.That(manager.IsPaused, Is.False);
         Assert.That(stateChanges, Is.GreaterThanOrEqualTo(2));
     }
 
     [Test]
     public async Task Stop_CancelsRunningTask()
     {
-        var gate = new AsyncManualResetEvent(set: true);
-        var manager = new TaskManager(new TestBotApi(), gate);
+        var manager = new TaskManager(new TestBotApi());
         var blocking = new BlockingTask();
 
         var runTask = manager.RunTaskAsync(blocking);
@@ -41,8 +38,7 @@ public class TaskManagerTests
     [Test]
     public async Task RunTaskAsync_ThrowsWhenAlreadyRunning()
     {
-        var gate = new AsyncManualResetEvent(set: true);
-        var manager = new TaskManager(new TestBotApi(), gate);
+        var manager = new TaskManager(new TestBotApi());
         var blocking = new BlockingTask();
 
         var runTask = manager.RunTaskAsync(blocking);

@@ -22,24 +22,20 @@ public sealed class BotApi : IBotApi
     private readonly IDeviceController _device;
     private readonly IVisionService _vision;
     private readonly IOcrService _ocr;
-    private readonly AsyncManualResetEvent _pauseGate;
     private readonly Queue<ScreenFrame> _recentScreens = new();
 
     /// <summary>
     /// Creates a bot API backed by device, vision, and OCR services.
     /// </summary>
-    public BotApi(IDeviceController device, IVisionService vision, IOcrService ocr, AsyncManualResetEvent pauseGate)
+    public BotApi(IDeviceController device, IVisionService vision, IOcrService ocr)
     {
         _device = device;
         _vision = vision;
         _ocr = ocr;
-        _pauseGate = pauseGate;
     }
-
 
     public async Task<ScreenPoint?> FindTemplateAsync(string relativeTemplatePath, CancellationToken ct, double threshold)
     {
-        await EnsureNotPausedAsync(ct);
         var screen = await CaptureScreenAsync(ct);
         return await _vision.FindTemplateAsync(screen, TemplatePaths.For(relativeTemplatePath), threshold, ct);
     }
@@ -57,7 +53,6 @@ public sealed class BotApi : IBotApi
 
         while (true)
         {
-            await EnsureNotPausedAsync(ct);
             var screen = await CaptureScreenAsync(ct);
             if (await TryHandlePopupAsync(screen, ct))
             {
@@ -94,7 +89,6 @@ public sealed class BotApi : IBotApi
 
         while (true)
         {
-            await EnsureNotPausedAsync(ct);
             var screen = await CaptureScreenAsync(ct);
             if (await TryHandlePopupAsync(screen, ct))
             {
@@ -161,33 +155,19 @@ public sealed class BotApi : IBotApi
 
     public async Task<string> ReadTextAsync(ScreenRect roi, CancellationToken ct)
     {
-        await EnsureNotPausedAsync(ct);
         var screen = await CaptureScreenAsync(ct);
         return await _ocr.ReadTextAsync(screen, roi, ct);
     }
 
     public async Task<RgbColor> GetPixelAsync(ScreenPoint point, CancellationToken ct)
     {
-        await EnsureNotPausedAsync(ct);
         var screen = await CaptureScreenAsync(ct);
         return _vision.GetPixel(screen, point.X, point.Y);
     }
 
-
-    /// <summary>
-    /// Waits for the pause gate to be open.
-    /// </summary>
-    private async Task EnsureNotPausedAsync(CancellationToken ct)
+    private static async Task RunDeviceActionAsync(Func<Task> action, CancellationToken ct)
     {
-        await _pauseGate.WaitAsync(ct);
-    }
-
-    /// <summary>
-    /// Runs a device action after honoring the pause gate.
-    /// </summary>
-    private async Task RunDeviceActionAsync(Func<Task> action, CancellationToken ct)
-    {
-        await EnsureNotPausedAsync(ct);
+        ct.ThrowIfCancellationRequested();
         await action();
     }
 

@@ -37,7 +37,7 @@ public sealed partial class App : Application
 
             _viewModel = new MainViewModel();
             window.DataContext = _viewModel;
-            Log.Information("UI initialized");
+            Log.Debug("UI initialized");
             _ = InitializeRuntimeAsync(_viewModel);
         }
 
@@ -49,6 +49,7 @@ public sealed partial class App : Application
         try
         {
             Log.Debug("Preparing runtime services...");
+            await Task.Delay(5000); //simulate platform-tools download time
             var runtime = await Task.Run(CreateRuntime);
             _ocr = runtime.Ocr;
             viewModel.CompleteStartup(runtime.TaskManager, runtime.Tasks);
@@ -71,19 +72,42 @@ public sealed partial class App : Application
         var device = new AdbDeviceController(Log.Warning, config.DeviceSerial);
         var vision = new VisionService();
         var ocr = new TesseractOcrService();
-        var pauseGate = new AsyncManualResetEvent(true);
-        var api = new BotApi(device, vision, ocr, pauseGate);
-        var taskManager = new TaskManager(api, pauseGate);
+        var api = new BotApi(device, vision, ocr);
+        var taskManager = new TaskManager(api);
 
         var tasks = new List<TaskDescriptor>
         {
-            new(PushRoutine.TaskName, () => new PushRoutine(api, config)),
-            new(PushAfkStages.TaskName, () => new PushAfkStages(api, config)),
-            new(PushSeasonAfkStages.TaskName, () => new PushSeasonAfkStages(api, config)),
-            new(LegendTrial.TaskName, () => new LegendTrial(api, config)),
-            new(HomesteadOrders.TaskName, () => new HomesteadOrders(api)),
+            new(
+                PushRoutine.TaskName,
+                "Runs Legend Trial, Season AFK Stages, and regular AFK Stages repeatedly using the configured battle settings.",
+                () => new PushRoutine(api, config),
+                "Routine"),
+            new(
+                PushAfkStages.TaskName,
+                "Pushes regular AFK stages by copying record formations and retrying until the configured limit is reached.",
+                () => new PushAfkStages(api, config),
+                "Battle"),
+            new(
+                PushSeasonAfkStages.TaskName,
+                "Pushes Season AFK stages by copying record formations and retrying until the configured limit is reached.",
+                () => new PushSeasonAfkStages(api, config),
+                "Battle"),
+            new(
+                LegendTrial.TaskName,
+                "Runs available Legend Trial towers using the configured battle attempts and formation limits.",
+                () => new LegendTrial(api, config),
+                "Battle"),
+            new(
+                HomesteadOrders.TaskName,
+                "Crafts requested Homestead items, delivers completed orders, and stops when stamina or ingredients run out.",
+                () => new HomesteadOrders(api),
+                "Homestead"),
 #if DEBUG
-            new(DebugTask.TaskName, () => new DebugTask(api)),
+            new(
+                DebugTask.TaskName,
+                "Runs a lightweight development task used to verify runtime wiring and logging.",
+                () => new DebugTask(api),
+                "Development"),
 #endif
         };
 
