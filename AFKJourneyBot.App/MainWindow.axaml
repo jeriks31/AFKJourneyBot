@@ -1,0 +1,74 @@
+<Window x:Class="AFKJourneyBot.App.MainWindow"
+        xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="AFK Journey Bot"
+        Icon="avares://AFKJourneyBot.App/Assets/app.ico"
+        Width="480"
+        Height="720"
+        MinWidth="380"
+        MinHeight="520">
+  <Grid Margin="16" RowDefinitions="*,300" RowSpacing="12">
+    <Border Grid.Row="0" Classes="panel">
+      <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="10">
+        <TextBlock Grid.Row="0" Classes="section-title" Text="Tasks" />
+        <TextBlock Grid.Row="1"
+                   FontSize="12"
+                   Foreground="#98A2B3"
+                   Text="{Binding StatusText}" />
+
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+          <ItemsControl ItemsSource="{Binding Tasks}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Button Margin="0,0,0,8"
+                        HorizontalAlignment="Stretch"
+                        Content="{Binding Name}"
+                        Command="{Binding $parent[Window].DataContext.RunTaskCommand}"
+                        CommandParameter="{Binding}" />
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+
+        <Grid Grid.Row="3" ColumnDefinitions="*,*" ColumnSpacing="8">
+          <Button Grid.Column="0"
+                  Content="{Binding PauseButtonText}"
+                  Command="{Binding PauseCommand}" />
+          <Button Grid.Column="1"
+                  Content="Stop"
+                  Command="{Binding StopCommand}" />
+        </Grid>
+      </Grid>
+    </Border>
+
+    <Border Grid.Row="1" Classes="panel">
+      <Grid RowDefinitions="Auto,*" RowSpacing="8">
+        <TextBlock Grid.Row="0" Classes="section-title" Text="Logs" />
+
+        <Border Grid.Row="1"
+                Background="#0B0D12"
+                BorderBrush="#252B34"
+                BorderThickness="1"
+                CornerRadius="4"
+                Padding="8,6">
+          <ScrollViewer x:Name="LogScrollViewer"
+                        HorizontalScrollBarVisibility="Auto"
+                        VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding Logs}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <TextBlock Classes="log-line"
+                             Classes.debug="{Binding IsDebug}"
+                             Classes.info="{Binding IsInformation}"
+                             Classes.warning="{Binding IsWarning}"
+                             Classes.error="{Binding IsError}"
+                             Text="{Binding Message}" />
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+        </Border>
+      </Grid>
+    </Border>
+  </Grid>
+</Window>

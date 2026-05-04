@@ -1,0 +1,56 @@
+<Application x:Class="AFKJourneyBot.App.App"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Application.Styles>
+    <FluentTheme />
+
+    <Style Selector="Window">
+      <Setter Property="Background" Value="#111318" />
+      <Setter Property="Foreground" Value="#E8EAED" />
+      <Setter Property="FontFamily" Value="Inter, Segoe UI, Arial" />
+    </Style>
+
+    <Style Selector="Button">
+      <Setter Property="MinHeight" Value="34" />
+      <Setter Property="Padding" Value="12,7" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+    </Style>
+
+    <Style Selector="TextBlock.section-title">
+      <Setter Property="FontSize" Value="15" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Foreground" Value="#F4F6F8" />
+    </Style>
+
+    <Style Selector="Border.panel">
+      <Setter Property="Background" Value="#181B22" />
+      <Setter Property="BorderBrush" Value="#2D3440" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Padding" Value="12" />
+    </Style>
+
+    <Style Selector="TextBlock.log-line">
+      <Setter Property="FontFamily" Value="Cascadia Mono, Consolas, Courier New" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="Foreground" Value="#B8C0CC" />
+      <Setter Property="TextWrapping" Value="NoWrap" />
+    </Style>
+
+    <Style Selector="TextBlock.log-line.debug">
+      <Setter Property="Foreground" Value="#8EA0B8" />
+    </Style>
+
+    <Style Selector="TextBlock.log-line.info">
+      <Setter Property="Foreground" Value="#B8C0CC" />
+    </Style>
+
+    <Style Selector="TextBlock.log-line.warning">
+      <Setter Property="Foreground" Value="#F2C14E" />
+    </Style>
+
+    <Style Selector="TextBlock.log-line.error">
+      <Setter Property="Foreground" Value="#FF6B6B" />
+    </Style>
+  </Application.Styles>
+</Application>

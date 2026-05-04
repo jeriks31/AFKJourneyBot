@@ -1,7 +1,5 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AFKJourneyBot.UI", "AFKJourneyBot.UI\AFKJourneyBot.UI.csproj", "{EE59C3DC-B8B5-465C-B4DE-699639B48999}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AFKJourneyBot.Core", "AFKJourneyBot.Core\AFKJourneyBot.Core.csproj", "{5A13A865-C5BA-45A4-BC64-E7B344027F37}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AFKJourneyBot.Device", "AFKJourneyBot.Device\AFKJourneyBot.Device.csproj", "{2E7EAB73-0D24-4AC1-B28D-D7E037AAD742}"
@@ -12,16 +10,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AFKJourneyBot.Common", "AFK
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AFKJourneyBot.Tests", "AFKJourneyBot.Tests\AFKJourneyBot.Tests.csproj", "{8672C878-2497-4E44-8902-2C039859053C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AFKJourneyBot.App", "AFKJourneyBot.App\AFKJourneyBot.App.csproj", "{65FAB4D2-7A64-42D0-A192-9679BC41E62B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{EE59C3DC-B8B5-465C-B4DE-699639B48999}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{EE59C3DC-B8B5-465C-B4DE-699639B48999}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{EE59C3DC-B8B5-465C-B4DE-699639B48999}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{EE59C3DC-B8B5-465C-B4DE-699639B48999}.Release|Any CPU.Build.0 = Release|Any CPU
 		{5A13A865-C5BA-45A4-BC64-E7B344027F37}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{5A13A865-C5BA-45A4-BC64-E7B344027F37}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5A13A865-C5BA-45A4-BC64-E7B344027F37}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -42,5 +38,9 @@ Global
 		{8672C878-2497-4E44-8902-2C039859053C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8672C878-2497-4E44-8902-2C039859053C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8672C878-2497-4E44-8902-2C039859053C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{65FAB4D2-7A64-42D0-A192-9679BC41E62B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{65FAB4D2-7A64-42D0-A192-9679BC41E62B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{65FAB4D2-7A64-42D0-A192-9679BC41E62B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{65FAB4D2-7A64-42D0-A192-9679BC41E62B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

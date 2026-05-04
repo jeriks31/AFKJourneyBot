@@ -1,7 +1,8 @@
+using System;
 using System.Collections.ObjectModel;
-using System.Windows;
+using Avalonia.Threading;
 
-namespace AFKJourneyBot.UI.Logging;
+namespace AFKJourneyBot.App.Logging;
 
 public static class LogStore
 {
@@ -10,15 +11,17 @@ public static class LogStore
     public static ObservableCollection<LogEntry> Entries { get; } = new();
 
     public static void Add(LogEntry entry)
+        => DispatchToUiThread(() => AddInternal(entry));
+
+    public static void DispatchToUiThread(Action action)
     {
-        var dispatcher = Application.Current?.Dispatcher;
-        if (dispatcher == null || dispatcher.CheckAccess())
+        if (Dispatcher.UIThread.CheckAccess())
         {
-            AddInternal(entry);
+            action();
             return;
         }
 
-        dispatcher.BeginInvoke(() => AddInternal(entry));
+        Dispatcher.UIThread.Post(action);
     }
 
     private static void AddInternal(LogEntry entry)

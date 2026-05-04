@@ -1,6 +1,7 @@
+using System;
 using System.Windows.Input;
 
-namespace AFKJourneyBot.UI;
+namespace AFKJourneyBot.App;
 
 public sealed class RelayCommand : ICommand
 {

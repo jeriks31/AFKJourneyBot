@@ -1,7 +1,8 @@
+using System;
 using Serilog.Core;
 using Serilog.Events;
 
-namespace AFKJourneyBot.UI.Logging;
+namespace AFKJourneyBot.App.Logging;
 
 public sealed class UiLogSink : ILogEventSink
 {

@@ -7,7 +7,7 @@ Automates common AFK Journey actions by driving an Android emulator via ADB and 
 1) Install an Android emulator with ADB support (MuMuPlayer, BlueStacks, etc.).
 2) Enable ADB in the emulator settings if required.
 3) Install and log in to AFK Journey on the emulator.
-4) Download the latest GitHub release and run `AFKJourneyBot.UI.exe`.
+4) Download the latest GitHub release and run `AFKJourneyBot.App.exe`.
 
 ## Contribute / develop
 
@@ -56,7 +56,7 @@ public sealed class DailyQuestTask(IBotApi botApi) : IBotTask
 
 ### Register the task in the UI
 
-Open `AFKJourneyBot.UI/App.xaml.cs` and add a `TaskDescriptor`:
+Open `AFKJourneyBot.App/App.axaml.cs` and add a `TaskDescriptor`:
 
 ```csharp
 var tasks = new List<TaskDescriptor>
@@ -70,7 +70,7 @@ The UI renders a button for each task.
 
 ### Templates
 
-Place template images in `AFKJourneyBot.UI/templates/`.  
+Place template images in `AFKJourneyBot.App/templates/`.
 `IBotApi` methods accept **relative** template paths (including subfolders), e.g.:
 
 ```csharp

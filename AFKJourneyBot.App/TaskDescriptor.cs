@@ -1,6 +1,7 @@
+using System;
 using AFKJourneyBot.Core.Tasks;
 
-namespace AFKJourneyBot.UI;
+namespace AFKJourneyBot.App;
 
 public sealed class TaskDescriptor
 {
