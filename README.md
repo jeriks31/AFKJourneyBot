@@ -21,7 +21,6 @@ Every task implements `IBotTask`:
 ```csharp
 public interface IBotTask
 {
-    string Name { get; }
     Task RunAsync(CancellationToken ct);
 }
 ```
@@ -33,7 +32,7 @@ Declare a public static `TaskName` so the UI can list tasks without instantiatin
 public sealed class DailyQuestTask(IBotApi botApi) : IBotTask
 {
     public const string TaskName = "Daily Quests";
-    public string Name => TaskName;
+    public const string TaskDescription = "Runs daily quest automation.";
 
     public async Task RunAsync(CancellationToken ct)
     {
@@ -56,21 +55,21 @@ public sealed class DailyQuestTask(IBotApi botApi) : IBotTask
 
 ### Register the task in the UI
 
-Open `AFKJourneyBot.App/App.axaml.cs` and add a `TaskDescriptor`:
+Open `AFKJourneyBot.Core/Tasks/TaskCatalog.cs` and add a `TaskDescriptor`:
 
 ```csharp
 var tasks = new List<TaskDescriptor>
 {
     new(
         SampleTask.TaskName,
-        "Short description shown when hovering the task button.",
-        () => new SampleTask(api),
-        "Sample Group"),
+        SampleTask.TaskDescription,
+        "Sample Group",
+        () => new SampleTask(api)),
     new(
         DailyQuestTask.TaskName,
-        "Runs daily quest automation.",
-        () => new DailyQuestTask(api),
-        "Daily")
+        DailyQuestTask.TaskDescription,
+        "Daily",
+        () => new DailyQuestTask(api))
 };
 ```
 

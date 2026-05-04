@@ -5,8 +5,8 @@ namespace AFKJourneyBot.Core.Tasks;
 
 public class DebugTask(IBotApi botApi) : IBotTask
 {
-    public static readonly string TaskName = "Debug";
-    public string Name => TaskName;
+    public const string TaskName = "Debug";
+    public const string TaskDescription = "Runs a lightweight development task used to verify runtime wiring and logging.";
 
     public async Task RunAsync(CancellationToken ct)
     {

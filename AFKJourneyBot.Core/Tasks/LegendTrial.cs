@@ -13,8 +13,8 @@ public class LegendTrial(IBotApi botApi, AppConfig config) : IBotTask
     private static readonly ScreenPoint Graveborn = new(930, 1190);
     private static readonly ScreenPoint Mauler = new(890, 1450);
 
-    public static string TaskName => "Legend Trial";
-    public string Name => TaskName;
+    public const string TaskName = "Legend Trial";
+    public const string TaskDescription = "Pushes available Legend Trial towers.";
     private readonly AppConfig.BattleTaskConfig _config = config.LegendTrial!;
 
     public async Task RunAsync(CancellationToken ct)

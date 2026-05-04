@@ -12,7 +12,7 @@ public class TaskManagerTests
         var stateChanges = 0;
         manager.StateChanged += (_, _) => stateChanges++;
 
-        await manager.RunTaskAsync(new ImmediateTask());
+        await manager.RunTaskAsync(new ImmediateTask(), "Immediate");
 
         Assert.That(manager.IsRunning, Is.False);
         Assert.That(stateChanges, Is.GreaterThanOrEqualTo(2));
@@ -24,7 +24,7 @@ public class TaskManagerTests
         var manager = new TaskManager(new TestBotApi());
         var blocking = new BlockingTask();
 
-        var runTask = manager.RunTaskAsync(blocking);
+        var runTask = manager.RunTaskAsync(blocking, "Blocking");
 
         await WaitUntilAsync(() => manager.IsRunning, TimeSpan.FromSeconds(1));
         manager.Stop();
@@ -41,11 +41,11 @@ public class TaskManagerTests
         var manager = new TaskManager(new TestBotApi());
         var blocking = new BlockingTask();
 
-        var runTask = manager.RunTaskAsync(blocking);
+        var runTask = manager.RunTaskAsync(blocking, "Blocking");
         await WaitUntilAsync(() => manager.IsRunning, TimeSpan.FromSeconds(1));
 
         var ex = Assert.ThrowsAsync<InvalidOperationException>(() =>
-            manager.RunTaskAsync(new ImmediateTask()));
+            manager.RunTaskAsync(new ImmediateTask(), "Immediate"));
         Assert.That(ex?.Message, Is.EqualTo("A task is already running."));
 
         manager.Stop();
@@ -74,8 +74,6 @@ public class TaskManagerTests
 
     private sealed class ImmediateTask : IBotTask
     {
-        public string Name => "Immediate";
-
         public Task RunAsync(CancellationToken ct) => Task.CompletedTask;
     }
 
@@ -83,7 +81,6 @@ public class TaskManagerTests
     {
         private readonly TaskCompletionSource<bool> _canceled = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        public string Name => "Blocking";
         public Task Canceled => _canceled.Task;
 
         public async Task RunAsync(CancellationToken ct)

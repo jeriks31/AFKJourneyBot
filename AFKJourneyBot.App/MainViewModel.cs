@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using AFKJourneyBot.App.Logging;
 using AFKJourneyBot.Core.Runtime;
+using AFKJourneyBot.Core.Tasks;
 using Serilog;
 
 namespace AFKJourneyBot.App;
@@ -159,7 +160,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         }
 
         var task = descriptor.CreateTask();
-        _ = _taskManager.RunTaskAsync(task).ContinueWith(
+        _ = _taskManager.RunTaskAsync(task, descriptor.Name).ContinueWith(
             t =>
             {
                 if (t.Exception != null)

@@ -16,7 +16,8 @@ public class HomesteadOrders(IBotApi botApi) : IBotTask
     ];
 
     public const string TaskName = "Homestead Orders";
-    public string Name => TaskName;
+    public const string TaskDescription =
+        "Crafts requested Homestead items, delivers completed orders, and stops when stamina or ingredients run out.";
 
     public async Task RunAsync(CancellationToken ct)
     {

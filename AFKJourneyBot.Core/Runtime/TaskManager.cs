@@ -38,7 +38,8 @@ public sealed class TaskManager
     /// Runs a task to completion, cancellation, or failure.
     /// </summary>
     /// <param name="task">Task instance to run.</param>
-    public async Task RunTaskAsync(IBotTask task)
+    /// <param name="taskName">Display name used for logs.</param>
+    public async Task RunTaskAsync(IBotTask task, string taskName)
     {
         if (IsRunning)
         {
@@ -48,21 +49,21 @@ public sealed class TaskManager
         _cts = new CancellationTokenSource();
 
         OnStateChanged();
-        Log.Information("Starting task: {TaskName}", task.Name);
+        Log.Information("Starting task: {TaskName}", taskName);
 
         _runningTask = Task.Run(() => task.RunAsync(_cts.Token));
         try
         {
             await _runningTask;
-            Log.Information("Task completed: {TaskName}", task.Name);
+            Log.Information("Task completed: {TaskName}", taskName);
         }
         catch (OperationCanceledException)
         {
-            Log.Information("Task canceled: {TaskName}", task.Name);
+            Log.Information("Task canceled: {TaskName}", taskName);
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Task failed: {TaskName}", task.Name);
+            Log.Error(ex, "Task failed: {TaskName}", taskName);
             throw;
         }
         finally

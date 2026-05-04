@@ -9,7 +9,7 @@ public class PushSeasonAfkStages(IBotApi botApi, AppConfig config) : IBotTask
 {
     private readonly AppConfig.BattleTaskConfig _config = config.PushSeasonAfkStages!;
     public const string TaskName = "Push Season AFK Stages";
-    public string Name => TaskName;
+    public const string TaskDescription = "Pushes Season AFK stages.";
 
     public async Task RunAsync(CancellationToken ct)
     {

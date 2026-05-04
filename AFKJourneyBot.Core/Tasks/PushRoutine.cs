@@ -7,7 +7,8 @@ namespace AFKJourneyBot.Core.Tasks;
 public sealed class PushRoutine(IBotApi botApi, AppConfig config) : IBotTask
 {
     public const string TaskName = "Push Routine";
-    public string Name => TaskName;
+    public const string TaskDescription =
+        "Runs Legend Trial, Season AFK Stages, and regular AFK Stages repeatedly.";
 
     private readonly LegendTrial _legendTrialTask = new(botApi, config);
     private readonly PushSeasonAfkStages _seasonTask = new(botApi, config);
