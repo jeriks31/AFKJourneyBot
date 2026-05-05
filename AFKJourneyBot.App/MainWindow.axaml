@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:tasks="clr-namespace:AFKJourneyBot.Core.Tasks;assembly=AFKJourneyBot.Core"
         mc:Ignorable="d"
         d:DesignWidth="480"
         d:DesignHeight="720"
@@ -38,20 +39,31 @@
       </Grid>
     </Border>
 
-    <Border Grid.Row="1" Classes="panel">
-      <Grid RowDefinitions="Auto,*" RowSpacing="10">
+    <Border Grid.Row="1">
+      <Grid RowDefinitions="Auto,*" RowSpacing="8">
         <TextBlock Grid.Row="0" Classes="section-title" Text="Tasks" />
 
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-          <ItemsControl ItemsSource="{Binding Tasks}">
+          <ItemsControl ItemsSource="{Binding Tasks}"
+                        VerticalAlignment="Top">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <UniformGrid
+                  Columns="{Binding Bounds.Width,
+                  RelativeSource={RelativeSource AncestorType=ScrollViewer},
+                  Converter={StaticResource TaskColumnCountConverter}}" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
               <DataTemplate>
-                <Button Margin="0,0,0,8"
-                        HorizontalAlignment="Stretch"
-                        Content="{Binding Name}"
+                <Button Classes="task-card"
                         ToolTip.Tip="{Binding Description}"
                         Command="{Binding $parent[Window].DataContext.RunTaskCommand}"
-                        CommandParameter="{Binding}" />
+                        CommandParameter="{Binding}">
+                  <TextBlock Classes="task-title"
+                             Text="{Binding Name}"
+                             TextWrapping="Wrap" />
+                </Button>
               </DataTemplate>
             </ItemsControl.ItemTemplate>
           </ItemsControl>
@@ -59,7 +71,7 @@
       </Grid>
     </Border>
 
-    <Border Grid.Row="2" Classes="panel">
+    <Border Grid.Row="2">
       <Grid RowDefinitions="Auto,*" RowSpacing="8">
         <TextBlock Grid.Row="0" Classes="section-title" Text="Logs" />
 
