@@ -97,9 +97,12 @@ public class HomesteadOrders(IBotApi botApi) : IBotTask
                             await botApi.BackAsync(ct);
                             break;
                         }
-                        await WaitForCraftingToFinish(botApi, ct);
-                        Log.Information("Crafted item");
-                        itemsCrafted += CraftMultiplier5 ? 5 : 1;
+                        if (await WaitForCraftingToFinish(botApi, ct))
+                        {
+                            Log.Information("Crafted item");
+                            itemsCrafted += CraftMultiplier5 ? 5 : 1;
+                        }
+                        await Task.Delay(500, ct);
                     }
                 }
                 
@@ -156,6 +159,7 @@ public class HomesteadOrders(IBotApi botApi) : IBotTask
             : await botApi.WaitForTemplateAsync(template, ct);
         await Task.Delay(500, ct);
         await botApi.TapAsync(point, ct);
+        await botApi.TapAsync(point, ct); // Some buttons in the homestead are buggy and require two taps
     }
 
     private static async Task<bool> TryEnterBuilding(
@@ -177,7 +181,7 @@ public class HomesteadOrders(IBotApi botApi) : IBotTask
         }
     }
 
-    private static async Task WaitForCraftingToFinish(IBotApi botApi, CancellationToken ct)
+    private static async Task<bool> WaitForCraftingToFinish(IBotApi botApi, CancellationToken ct)
     {
         var start = DateTimeOffset.UtcNow;
         // Wait for crafting to start (big button in the lower middle becomes white)
@@ -186,7 +190,7 @@ public class HomesteadOrders(IBotApi botApi) : IBotTask
             if (DateTimeOffset.UtcNow - start >= TimeSpan.FromSeconds(10))
             {
                 Log.Warning("Crafting did not start within the expected time");
-                return;
+                return false;
             }
             await Task.Delay(500, ct);
         }
@@ -197,10 +201,12 @@ public class HomesteadOrders(IBotApi botApi) : IBotTask
             if (DateTimeOffset.UtcNow - start >= TimeSpan.FromSeconds(40))
             {
                 Log.Warning("Crafting did not end within the expected time");
-                return;
+                return false;
             }
             await Task.Delay(500, ct);
         }
+
+        return true;
     }
 
     private record ProductionBuilding(string Name, string OverviewButtonTemplate, string EnterBuildingTemplate);
