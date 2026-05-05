@@ -1,6 +1,9 @@
 using System.Collections.Specialized;
+using AFKJourneyBot.App.Design;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Threading;
+using AvaloniaDesign = Avalonia.Controls.Design;
 
 namespace AFKJourneyBot.App;
 
@@ -10,6 +13,11 @@ public sealed partial class MainWindow : Window
 
     public MainWindow()
     {
+        if (AvaloniaDesign.IsDesignMode)
+        {
+            AvaloniaDesign.SetDataContext(this, DesignData.MainWindow);
+        }
+
         InitializeComponent();
         DataContextChanged += (_, _) => AttachLogAutoScroll();
         Closed += (_, _) => DetachLogAutoScroll();
