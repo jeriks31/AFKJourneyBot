@@ -55,7 +55,7 @@
       <Setter Property="FontFamily" Value="Cascadia Mono, Consolas, Courier New" />
       <Setter Property="FontSize" Value="12" />
       <Setter Property="Foreground" Value="#B8C0CC" />
-      <Setter Property="TextWrapping" Value="NoWrap" />
+      <Setter Property="TextWrapping" Value="Wrap" />
     </Style>
 
     <Style Selector="TextBlock.log-line.debug">

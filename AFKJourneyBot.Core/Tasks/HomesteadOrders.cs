@@ -87,7 +87,7 @@ public class HomesteadOrders(IBotApi botApi) : IBotTask
                             outOfStamina = true;
                             break;
                         }
-                        await botApi.TapAsync(new ScreenPoint(540, 1715), ct);
+                        await botApi.TapAsync(new ScreenPoint(540, 1715), ct); // Tap "Start Crafting"
                         await Task.Delay(1500, ct);
                         if (await botApi.FindTemplateAsync("homestead/go_to_requests.png", ct) is not null)
                         {
@@ -159,7 +159,6 @@ public class HomesteadOrders(IBotApi botApi) : IBotTask
             : await botApi.WaitForTemplateAsync(template, ct);
         await Task.Delay(500, ct);
         await botApi.TapAsync(point, ct);
-        await botApi.TapAsync(point, ct); // Some buttons in the homestead are buggy and require two taps
     }
 
     private static async Task<bool> TryEnterBuilding(

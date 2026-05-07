@@ -82,9 +82,10 @@
                 CornerRadius="4"
                 Padding="8,6">
           <ScrollViewer x:Name="LogScrollViewer"
-                        HorizontalScrollBarVisibility="Auto"
+                        HorizontalScrollBarVisibility="Disabled"
                         VerticalScrollBarVisibility="Auto">
-            <ItemsControl ItemsSource="{Binding Logs}">
+            <ItemsControl ItemsSource="{Binding Logs}"
+                          HorizontalAlignment="Stretch">
               <ItemsControl.ItemTemplate>
                 <DataTemplate>
                   <TextBlock Classes="log-line"

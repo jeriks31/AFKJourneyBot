@@ -44,3 +44,5 @@ public static class TaskCatalog
         ];
     }
 }
+
+public sealed record TaskDescriptor(string Name, string Description, string Group, Func<IBotTask> CreateTask);
