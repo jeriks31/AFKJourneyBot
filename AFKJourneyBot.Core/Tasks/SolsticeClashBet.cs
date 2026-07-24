@@ -8,12 +8,7 @@ namespace AFKJourneyBot.Core.Tasks;
 
 public sealed class SolsticeClashBet(IBotApi botApi) : IBotTask
 {
-    private static readonly ScreenPoint[] ResultColorSamplePoints =
-    [
-        new(100, 100),
-        new(540, 100),
-        new(900, 100)
-    ];
+    private static readonly ScreenPoint ResultColorSamplePoint = new(540, 100);
     private static readonly ScreenRect TokenBalanceRegion = ScreenRect.FromXYWH(895, 40, 120, 40);
 
     private const string EventsTemplate = "solstice_clash/events.png";
@@ -22,6 +17,9 @@ public sealed class SolsticeClashBet(IBotApi botApi) : IBotTask
     private const string SpectateLiveTemplate = "solstice_clash/spectate_live.png";
     private const string RedAllInTemplate = "solstice_clash/red_all_in.png";
     private const string ResultBackTemplate = "solstice_clash/result_back.png";
+    private const string MainViewTemplate = "battle_modes.png";
+    private static readonly TimeSpan ResultWaitTimeout = TimeSpan.FromMinutes(3);
+    private static readonly TimeSpan ResultPollInterval = TimeSpan.FromSeconds(2);
 
     public const string TaskName = "Solstice Clash Bet";
     public const string TaskDescription =
@@ -43,11 +41,27 @@ public sealed class SolsticeClashBet(IBotApi botApi) : IBotTask
             await WaitAndTapAsync(SpectateLiveTemplate, ct);
             await WaitAndTapAsync(RedAllInTemplate, ct);
 
-            var resultBack = await botApi.WaitForTemplateAsync(
-                ResultBackTemplate,
+            var postBetState = await botApi.WaitForAnyTemplateAsync(
+            [
+                new TemplateWait(ResultBackTemplate, "resultBack", 0.90),
+                new TemplateWait(MainViewTemplate, "mainView", 0.95)
+            ],
                 ct,
-                timeout: TimeSpan.FromMinutes(10),
-                pollInterval: TimeSpan.FromSeconds(1));
+                timeout: ResultWaitTimeout,
+                pollInterval: ResultPollInterval);
+            if (postBetState is null)
+            {
+                throw new TemplateWaitTimeoutException(ResultBackTemplate, ResultWaitTimeout);
+            }
+
+            if (postBetState.Value.Key == "mainView")
+            {
+                Log.Warning(
+                    "Returned to the main view before a Solstice Clash result appeared; restarting betting cycle");
+                continue;
+            }
+
+            var resultBack = postBetState.Value.Point;
 
             var result = await IsVictoryAsync(ct) ? "victory" : "loss";
             Log.Information("Solstice Clash bet result: {Result}", result);
@@ -58,7 +72,7 @@ public sealed class SolsticeClashBet(IBotApi botApi) : IBotTask
 
     private async Task LogTokenBalanceAsync(CancellationToken ct)
     {
-        await Task.Delay(1000, ct); // Let UI settle
+        await Task.Delay(2000, ct); // Let UI settle
         var text = await botApi.ReadTextAsync(TokenBalanceRegion, ct);
         var digits = new string(text.Where(char.IsAsciiDigit).ToArray());
         if (long.TryParse(digits, NumberStyles.None, CultureInfo.InvariantCulture, out var tokenBalance))
@@ -72,12 +86,8 @@ public sealed class SolsticeClashBet(IBotApi botApi) : IBotTask
 
     private async Task<bool> IsVictoryAsync(CancellationToken ct)
     {
-        var redBlueBias = 0;
-        foreach (var point in ResultColorSamplePoints)
-        {
-            var color = await botApi.GetPixelAsync(point, ct);
-            redBlueBias += color.R - color.B;
-        }
+        var color = await botApi.GetPixelAsync(ResultColorSamplePoint, ct);
+        var redBlueBias = color.R - color.B;
 
         return redBlueBias > 0;
     }

@@ -15,6 +15,7 @@ public sealed class SolsticeClashBetTests
         "solstice_clash/red_all_in.png",
         "solstice_clash/result_back.png"
     ];
+    private static readonly string[] NavigationTemplates = CycleTemplates[..5];
 
     [Test]
     public async Task RunAsync_PerformsOneCycleInOrderAndExitsAfterCancellation()
@@ -26,13 +27,11 @@ public sealed class SolsticeClashBetTests
         await task.RunAsync(cts.Token);
 
         Assert.That(api.FindCalls, Is.EqualTo(["battle_modes.png"]));
-        Assert.That(api.WaitCalls.Select(call => call.Template), Is.EqualTo(CycleTemplates));
+        Assert.That(api.WaitCalls.Select(call => call.Template), Is.EqualTo(NavigationTemplates));
         Assert.That(api.TappedTemplates, Is.EqualTo(CycleTemplates));
         Assert.That(api.PixelCalls, Is.EqualTo(
         [
-            new ScreenPoint(100, 100),
-            new ScreenPoint(540, 100),
-            new ScreenPoint(900, 100)
+            new ScreenPoint(540, 100)
         ]));
         Assert.That(api.TextCalls, Is.EqualTo(
         [
@@ -40,19 +39,46 @@ public sealed class SolsticeClashBetTests
         ]));
         Assert.That(api.ObservedTokens, Has.All.EqualTo(cts.Token));
 
-        var navigationWaits = api.WaitCalls.Take(5);
         Assert.Multiple(() =>
         {
-            foreach (var wait in navigationWaits)
+            foreach (var wait in api.WaitCalls)
             {
                 Assert.That(wait.Timeout, Is.Null);
                 Assert.That(wait.PollInterval, Is.Null);
             }
 
-            var resultWait = api.WaitCalls[^1];
-            Assert.That(resultWait.Timeout, Is.EqualTo(TimeSpan.FromMinutes(10)));
-            Assert.That(resultWait.PollInterval, Is.EqualTo(TimeSpan.FromSeconds(1)));
+            var postBetWait = api.PostBetWaitCalls.Single();
+            Assert.That(postBetWait.Candidates.Select(candidate => candidate.Path), Is.EqualTo(
+            [
+                "solstice_clash/result_back.png",
+                "battle_modes.png"
+            ]));
+            Assert.That(postBetWait.Candidates.Select(candidate => candidate.Key), Is.EqualTo(
+            [
+                "resultBack",
+                "mainView"
+            ]));
+            Assert.That(postBetWait.Timeout, Is.EqualTo(TimeSpan.FromMinutes(3)));
+            Assert.That(postBetWait.PollInterval, Is.EqualTo(TimeSpan.FromSeconds(2)));
         });
+    }
+
+    [Test]
+    public async Task RunAsync_RestartsCycleWhenMatchReturnsToMainView()
+    {
+        using var cts = new CancellationTokenSource();
+        var api = new ScriptedBotApi(CycleTemplates, cts, postBetStates: ["mainView", "resultBack"]);
+        var task = new SolsticeClashBet(api);
+
+        await task.RunAsync(cts.Token);
+
+        Assert.That(api.FindCalls, Is.EqualTo(["battle_modes.png", "battle_modes.png"]));
+        Assert.That(api.PostBetWaitCalls, Has.Count.EqualTo(2));
+        Assert.That(api.TappedTemplates, Is.EqualTo(
+        [
+            .. NavigationTemplates,
+            .. CycleTemplates
+        ]));
     }
 
     [Test]
@@ -84,15 +110,18 @@ public sealed class SolsticeClashBetTests
     private sealed class ScriptedBotApi(
         IReadOnlyList<string> expectedTemplates,
         CancellationTokenSource cancellationSource,
-        string tokenBalanceText = "35083") : IBotApi
+        string tokenBalanceText = "35083",
+        IEnumerable<string>? postBetStates = null) : IBotApi
     {
         private readonly Dictionary<ScreenPoint, string> _templatesByPoint = expectedTemplates
             .Select((template, index) => (Template: template, Point: new ScreenPoint(index + 1, index + 1)))
             .ToDictionary(item => item.Point, item => item.Template);
+        private readonly Queue<string> _postBetStates = new(postBetStates ?? ["resultBack"]);
         private int _nextTemplate;
 
         public List<string> FindCalls { get; } = [];
         public List<WaitCall> WaitCalls { get; } = [];
+        public List<PostBetWaitCall> PostBetWaitCalls { get; } = [];
         public List<string> TappedTemplates { get; } = [];
         public List<ScreenPoint> PixelCalls { get; } = [];
         public List<ScreenRect> TextCalls { get; } = [];
@@ -118,14 +147,17 @@ public sealed class SolsticeClashBetTests
             Assert.That(relativeTemplatePath, Is.EqualTo(expectedTemplates[_nextTemplate]));
             WaitCalls.Add(new WaitCall(relativeTemplatePath, timeout, pollInterval));
             ObservedTokens.Add(ct);
-            return Task.FromResult(new ScreenPoint(++_nextTemplate, _nextTemplate));
+            var point = new ScreenPoint(_nextTemplate + 1, _nextTemplate + 1);
+            _nextTemplate = (_nextTemplate + 1) % NavigationTemplates.Length;
+            return Task.FromResult(point);
         }
 
         public Task TapAsync(ScreenPoint point, CancellationToken ct)
         {
-            TappedTemplates.Add(_templatesByPoint[point]);
+            var template = _templatesByPoint[point];
+            TappedTemplates.Add(template);
             ObservedTokens.Add(ct);
-            if (TappedTemplates.Count == expectedTemplates.Count)
+            if (template == expectedTemplates[^1])
             {
                 cancellationSource.Cancel();
             }
@@ -137,8 +169,14 @@ public sealed class SolsticeClashBetTests
             IReadOnlyList<TemplateWait> candidates,
             CancellationToken ct,
             TimeSpan? timeout = null,
-            TimeSpan? pollInterval = null) =>
-            throw new InvalidOperationException("Unexpected WaitForAnyTemplateAsync call.");
+            TimeSpan? pollInterval = null)
+        {
+            PostBetWaitCalls.Add(new PostBetWaitCall(candidates, timeout, pollInterval));
+            ObservedTokens.Add(ct);
+            var key = _postBetStates.Dequeue();
+            var point = key == "resultBack" ? new ScreenPoint(6, 6) : new ScreenPoint(100, 100);
+            return Task.FromResult<TemplateMatch?>(new TemplateMatch(key, point));
+        }
 
         public Task SwipeAsync(ScreenPoint start, ScreenPoint end, int durationMs, CancellationToken ct) =>
             throw new InvalidOperationException("Unexpected SwipeAsync call.");
@@ -165,4 +203,8 @@ public sealed class SolsticeClashBetTests
     }
 
     private sealed record WaitCall(string Template, TimeSpan? Timeout, TimeSpan? PollInterval);
+    private sealed record PostBetWaitCall(
+        IReadOnlyList<TemplateWait> Candidates,
+        TimeSpan? Timeout,
+        TimeSpan? PollInterval);
 }
