@@ -34,6 +34,11 @@ public static class TaskCatalog
                 HomesteadOrders.TaskDescription,
                 "Homestead",
                 () => new HomesteadOrders(api)),
+            new(
+                SolsticeClashBet.TaskName,
+                SolsticeClashBet.TaskDescription,
+                "Event",
+                () => new SolsticeClashBet(api)),
 #if DEBUG
             new(
                 DebugTask.TaskName,
