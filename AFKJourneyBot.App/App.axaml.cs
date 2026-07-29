@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using AFKJourneyBot.App.Logging;
+using AFKJourneyBot.App.Updates;
 using AFKJourneyBot.Common;
 using AFKJourneyBot.Core.Runtime;
 using AFKJourneyBot.Core.Tasks;
@@ -36,6 +37,7 @@ public sealed partial class App : Application
 
             _viewModel = new MainViewModel();
             window.DataContext = _viewModel;
+            window.Opened += async (_, _) => await UpdatePrompt.CheckOnStartupAsync(window);
             Log.Debug("UI initialized");
             _ = InitializeRuntimeAsync(_viewModel);
         }

@@ -1,0 +1,55 @@
+<Window x:Class="AFKJourneyBot.App.Updates.UpdateDialog"
+        xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="AFK Journey Bot Update"
+        Icon="avares://AFKJourneyBot.App/Assets/app.ico"
+        CanResize="False"
+        ShowInTaskbar="False"
+        SizeToContent="WidthAndHeight"
+        WindowStartupLocation="CenterOwner">
+  <Border Classes="panel"
+          Width="400"
+          Margin="16"
+          Padding="20">
+    <Grid RowDefinitions="Auto,Auto,Auto"
+          RowSpacing="18">
+      <StackPanel Grid.Row="0" Spacing="8">
+        <TextBlock Classes="section-title"
+                   FontSize="18"
+                   Text="A newer version is available" />
+        <TextBlock Foreground="#B8C0CC"
+                   Text="Open the GitHub release page to view the changes and download it."
+                   TextWrapping="Wrap" />
+      </StackPanel>
+
+      <Grid Grid.Row="1"
+            ColumnDefinitions="Auto,*"
+            ColumnSpacing="16"
+            RowDefinitions="Auto,Auto"
+            RowSpacing="6">
+        <TextBlock Grid.Row="0" Grid.Column="0"
+                   Foreground="#98A2B3"
+                   Text="Current version" />
+        <TextBlock x:Name="CurrentVersionText"
+                   Grid.Row="0" Grid.Column="1"
+                   FontWeight="SemiBold" />
+        <TextBlock Grid.Row="1" Grid.Column="0"
+                   Foreground="#98A2B3"
+                   Text="Latest version" />
+        <TextBlock x:Name="LatestVersionText"
+                   Grid.Row="1" Grid.Column="1"
+                   FontWeight="SemiBold" />
+      </Grid>
+
+      <StackPanel Grid.Row="2"
+                  HorizontalAlignment="Right"
+                  Orientation="Horizontal"
+                  Spacing="8">
+        <Button Content="Not now"
+                Click="NotNowClicked" />
+        <Button Content="View release"
+                Click="ViewReleaseClicked" />
+      </StackPanel>
+    </Grid>
+  </Border>
+</Window>
