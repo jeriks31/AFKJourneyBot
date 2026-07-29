@@ -84,19 +84,9 @@
           <ScrollViewer x:Name="LogScrollViewer"
                         HorizontalScrollBarVisibility="Disabled"
                         VerticalScrollBarVisibility="Auto">
-            <ItemsControl ItemsSource="{Binding Logs}"
-                          HorizontalAlignment="Stretch">
-              <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                  <TextBlock Classes="log-line"
-                             Classes.debug="{Binding IsDebug}"
-                             Classes.info="{Binding IsInformation}"
-                             Classes.warning="{Binding IsWarning}"
-                             Classes.error="{Binding IsError}"
-                             Text="{Binding Message}" />
-                </DataTemplate>
-              </ItemsControl.ItemTemplate>
-            </ItemsControl>
+            <SelectableTextBlock x:Name="LogTextBlock"
+                                 Classes="log-line"
+                                 HorizontalAlignment="Stretch" />
           </ScrollViewer>
         </Border>
       </Grid>

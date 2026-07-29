@@ -51,27 +51,12 @@
       <Setter Property="Padding" Value="12" />
     </Style>
 
-    <Style Selector="TextBlock.log-line">
+    <Style Selector="SelectableTextBlock.log-line">
       <Setter Property="FontFamily" Value="Cascadia Mono, Consolas, Courier New" />
       <Setter Property="FontSize" Value="12" />
       <Setter Property="Foreground" Value="#B8C0CC" />
       <Setter Property="TextWrapping" Value="Wrap" />
     </Style>
 
-    <Style Selector="TextBlock.log-line.debug">
-      <Setter Property="Foreground" Value="#8EA0B8" />
-    </Style>
-
-    <Style Selector="TextBlock.log-line.info">
-      <Setter Property="Foreground" Value="#B8C0CC" />
-    </Style>
-
-    <Style Selector="TextBlock.log-line.warning">
-      <Setter Property="Foreground" Value="#F2C14E" />
-    </Style>
-
-    <Style Selector="TextBlock.log-line.error">
-      <Setter Property="Foreground" Value="#FF6B6B" />
-    </Style>
   </Application.Styles>
 </Application>
