@@ -20,16 +20,17 @@ public sealed class SolsticeClashBet(IBotApi botApi) : IBotTask
     private const string SpectateLiveTemplate = "solstice_clash/spectate_live.png";
     private const string RedAllInTemplate = "solstice_clash/red_all_in.png";
     private const string ResultBackTemplate = "solstice_clash/result_back.png";
-    private const string MainViewTemplate = "battle_modes.png";
     private static readonly TimeSpan ResultWaitTimeout = TimeSpan.FromMinutes(5);
     private static readonly TimeSpan ResultPollInterval = TimeSpan.FromSeconds(2);
 
     public const string TaskName = "Solstice Clash Bet";
+
     public const string TaskDescription =
         "Repeatedly bets all available tokens on the higher-rated competitor in the first live Solstice Clash match.";
 
     public async Task RunAsync(CancellationToken ct)
     {
+        var record = new WinLossRecord(0, 0);
         while (!ct.IsCancellationRequested)
         {
             await NavigationUtils.EnsureMainViewAsync(botApi, ct);
@@ -38,7 +39,13 @@ public sealed class SolsticeClashBet(IBotApi botApi) : IBotTask
             await WaitAndTapAsync(EventCardTemplate, ct);
 
             var fortunePicks = await botApi.WaitForTemplateAsync(FortunePicksTemplate, ct);
-            await LogTokenBalanceAsync(ct);
+            var tokenBalance = await GetTokenBalanceAsync(ct);
+            if (tokenBalance <= 0)
+            {
+                Log.Information("No Solstice Clash tokens available; exiting betting task");
+                return;
+            }
+
             await botApi.TapAsync(fortunePicks, ct);
 
             await WaitAndTapAsync(SpectateLiveTemplate, ct);
@@ -49,46 +56,44 @@ public sealed class SolsticeClashBet(IBotApi botApi) : IBotTask
                 : redAllIn;
             await botApi.TapAsync(allInCoords, ct);
 
-            var postBetState = await botApi.WaitForAnyTemplateAsync(
-            [
-                new TemplateWait(ResultBackTemplate, "resultBack", 0.90),
-                new TemplateWait(MainViewTemplate, "mainView", 0.95)
-            ],
-                ct,
-                timeout: ResultWaitTimeout,
-                pollInterval: ResultPollInterval);
-            if (postBetState is null)
+            ScreenPoint resultBack;
+            try
             {
-                throw new TemplateWaitTimeoutException(ResultBackTemplate, ResultWaitTimeout);
+                resultBack = await botApi.WaitForTemplateAsync(
+                    ResultBackTemplate,
+                    ct,
+                    timeout: ResultWaitTimeout,
+                    pollInterval: ResultPollInterval);
             }
-
-            if (postBetState.Value.Key == "mainView")
+            catch (TemplateWaitTimeoutException)
             {
-                Log.Warning(
-                    "Returned to the main view before a Solstice Clash result appeared; restarting betting cycle");
+                Log.Warning("No Solstice Clash result found; restarting betting cycle");
                 continue;
             }
 
-            var resultBack = postBetState.Value.Point;
+            var isVictory = await IsVictoryAsync(ct);
+            record = isVictory
+                ? record with { Wins = record.Wins + 1 }
+                : record with { Losses = record.Losses + 1 };
 
-            var result = await IsVictoryAsync(ct) ? "victory" : "loss";
-            Log.Information("Solstice Clash bet result: {Result}", result);
+            Log.Information("Betting record: {Wins}W - {Losses}L", record.Wins, record.Losses);
 
             await botApi.TapAsync(resultBack, ct);
         }
     }
 
-    private async Task LogTokenBalanceAsync(CancellationToken ct)
+    private async Task<long?> GetTokenBalanceAsync(CancellationToken ct)
     {
-        await Task.Delay(2000, ct); // Let UI settle
+        await Task.Delay(500, ct); // Let UI settle
         var text = await botApi.ReadNumberAsync(TokenBalanceRegion, ct);
         if (TryParseNumber(text, out var tokenBalance))
         {
             Log.Information("Current Solstice Clash token balance: {TokenBalance}", tokenBalance);
-            return;
+            return tokenBalance;
         }
 
         Log.Warning("Could not read the current Solstice Clash token balance; continuing task");
+        return null;
     }
 
     private async Task<BetSide> SelectBetSideAsync(CancellationToken ct)
@@ -130,4 +135,6 @@ public sealed class SolsticeClashBet(IBotApi botApi) : IBotTask
         Blue,
         Red
     }
+
+    private record WinLossRecord(int Wins, int Losses);
 }
