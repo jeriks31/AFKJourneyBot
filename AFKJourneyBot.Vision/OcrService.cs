@@ -7,12 +7,14 @@ namespace AFKJourneyBot.Vision;
 public interface IOcrService
 {
     Task<string> ReadTextAsync(ScreenFrame screen, ScreenRect roi, CancellationToken ct);
+    Task<string> ReadNumberAsync(ScreenFrame screen, ScreenRect roi, CancellationToken ct);
 }
 
 public sealed class TesseractOcrService : IOcrService, IDisposable
 {
     private readonly TesseractEngine _engine;
     private readonly SemaphoreSlim _engineLock = new(1, 1);
+    private long _debugCaptureSequence;
 
     public TesseractOcrService(string? tessdataPath = null, string language = "eng")
     {
@@ -21,9 +23,20 @@ public sealed class TesseractOcrService : IOcrService, IDisposable
             : tessdataPath;
 
         _engine = new TesseractEngine(resolvedPath, language, EngineMode.Default);
+        _engine.SetVariable("user_defined_dpi", "300");
     }
 
-    public async Task<string> ReadTextAsync(ScreenFrame screen, ScreenRect roi, CancellationToken ct)
+    public Task<string> ReadTextAsync(ScreenFrame screen, ScreenRect roi, CancellationToken ct) =>
+        ReadAsync(screen, roi, numbersOnly: false, ct);
+
+    public Task<string> ReadNumberAsync(ScreenFrame screen, ScreenRect roi, CancellationToken ct) =>
+        ReadAsync(screen, roi, numbersOnly: true, ct);
+
+    private async Task<string> ReadAsync(
+        ScreenFrame screen,
+        ScreenRect roi,
+        bool numbersOnly,
+        CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
 
@@ -44,20 +57,63 @@ public sealed class TesseractOcrService : IOcrService, IDisposable
         Cv2.CvtColor(cropped, gray, ColorConversionCodes.BGR2GRAY);
         using var thresh = new Mat();
         Cv2.Threshold(gray, thresh, 0, 255, ThresholdTypes.Binary | ThresholdTypes.Otsu);
+        using var inverted = new Mat();
+        Cv2.BitwiseNot(thresh, inverted);
 
-        Cv2.ImEncode(".png", thresh, out var pngBytes);
+        Cv2.ImEncode(".png", inverted, out var pngBytes);
+        Cv2.ImEncode(".png", cropped, out var croppedPngBytes);
+        await SaveDebugImagesAsync(screen, roi, croppedPngBytes, pngBytes, ct);
         using var pix = Pix.LoadFromMemory(pngBytes);
 
         await _engineLock.WaitAsync(ct);
         try
         {
-            using var page = _engine.Process(pix);
+            if (numbersOnly)
+            {
+                _engine.SetVariable("tessedit_char_whitelist", "0123456789");
+            }
+
+            using var page = _engine.Process(pix, PageSegMode.SingleLine);
             return page.GetText()?.Trim() ?? string.Empty;
         }
         finally
         {
+            if (numbersOnly)
+            {
+                _engine.SetVariable("tessedit_char_whitelist", string.Empty);
+            }
+
             _engineLock.Release();
         }
+    }
+
+    private async Task SaveDebugImagesAsync(
+        ScreenFrame screen,
+        ScreenRect roi,
+        byte[] croppedPngBytes,
+        byte[] thresholdPngBytes,
+        CancellationToken ct)
+    {
+        var folder = Path.Combine(AppContext.BaseDirectory, "ocr_debug_screenshots");
+        Directory.CreateDirectory(folder);
+
+        var sequence = Interlocked.Increment(ref _debugCaptureSequence);
+        var timestamp = screen.CapturedAtUtc.ToString("yyyyMMdd_HHmmss_fff");
+        var baseName = $"{timestamp}_{sequence:D4}_{roi.X}_{roi.Y}_{roi.Width}x{roi.Height}";
+
+        await Task.WhenAll(
+            File.WriteAllBytesAsync(
+                Path.Combine(folder, $"{baseName}_screen.png"),
+                screen.PngBytes,
+                ct),
+            File.WriteAllBytesAsync(
+                Path.Combine(folder, $"{baseName}_roi.png"),
+                croppedPngBytes,
+                ct),
+            File.WriteAllBytesAsync(
+                Path.Combine(folder, $"{baseName}_threshold.png"),
+                thresholdPngBytes,
+                ct));
     }
 
     public void Dispose()

@@ -8,8 +8,11 @@ namespace AFKJourneyBot.Core.Tasks;
 
 public sealed class SolsticeClashBet(IBotApi botApi) : IBotTask
 {
+    private const int ScreenRightEdgeX = 1079;
     private static readonly ScreenPoint ResultColorSamplePoint = new(540, 100);
-    private static readonly ScreenRect TokenBalanceRegion = ScreenRect.FromXYWH(895, 40, 120, 40);
+    private static readonly ScreenRect TokenBalanceRegion = ScreenRect.FromXYWH(898, 46, 110, 27);
+    private static readonly ScreenRect BlueMmrRegion = ScreenRect.FromXYWH(235, 107, 96, 38);
+    private static readonly ScreenRect RedMmrRegion = ScreenRect.FromXYWH(797, 107, 96, 38);
 
     private const string EventsTemplate = "solstice_clash/events.png";
     private const string EventCardTemplate = "solstice_clash/event_card.png";
@@ -23,7 +26,7 @@ public sealed class SolsticeClashBet(IBotApi botApi) : IBotTask
 
     public const string TaskName = "Solstice Clash Bet";
     public const string TaskDescription =
-        "Repeatedly bets all available tokens on the red side of the first live Solstice Clash match.";
+        "Repeatedly bets all available tokens on the higher-rated competitor in the first live Solstice Clash match.";
 
     public async Task RunAsync(CancellationToken ct)
     {
@@ -39,7 +42,12 @@ public sealed class SolsticeClashBet(IBotApi botApi) : IBotTask
             await botApi.TapAsync(fortunePicks, ct);
 
             await WaitAndTapAsync(SpectateLiveTemplate, ct);
-            await WaitAndTapAsync(RedAllInTemplate, ct);
+            var redAllIn = await botApi.WaitForTemplateAsync(RedAllInTemplate, ct);
+            var betSide = await SelectBetSideAsync(ct);
+            var allInCoords = betSide == BetSide.Blue
+                ? redAllIn with { X = ScreenRightEdgeX - redAllIn.X }
+                : redAllIn;
+            await botApi.TapAsync(allInCoords, ct);
 
             var postBetState = await botApi.WaitForAnyTemplateAsync(
             [
@@ -73,15 +81,37 @@ public sealed class SolsticeClashBet(IBotApi botApi) : IBotTask
     private async Task LogTokenBalanceAsync(CancellationToken ct)
     {
         await Task.Delay(2000, ct); // Let UI settle
-        var text = await botApi.ReadTextAsync(TokenBalanceRegion, ct);
-        var digits = new string(text.Where(char.IsAsciiDigit).ToArray());
-        if (long.TryParse(digits, NumberStyles.None, CultureInfo.InvariantCulture, out var tokenBalance))
+        var text = await botApi.ReadNumberAsync(TokenBalanceRegion, ct);
+        if (TryParseNumber(text, out var tokenBalance))
         {
             Log.Information("Current Solstice Clash token balance: {TokenBalance}", tokenBalance);
             return;
         }
 
         Log.Warning("Could not read the current Solstice Clash token balance; continuing task");
+    }
+
+    private async Task<BetSide> SelectBetSideAsync(CancellationToken ct)
+    {
+        var blueText = await botApi.ReadNumberAsync(BlueMmrRegion, ct);
+        var redText = await botApi.ReadNumberAsync(RedMmrRegion, ct);
+
+        if (TryParseNumber(blueText, out var blueMmr) && TryParseNumber(redText, out var redMmr))
+        {
+            var side = blueMmr > redMmr ? BetSide.Blue : BetSide.Red;
+            Log.Information("Solstice Clash MMRs: blue {BlueMmr}, red {RedMmr}; betting on {BetSide}", blueMmr, redMmr,
+                side);
+            return side;
+        }
+
+        Log.Warning("Could not read both Solstice Clash competitor MMRs; betting on red");
+        return BetSide.Red;
+    }
+
+    private static bool TryParseNumber(string text, out long value)
+    {
+        var digits = new string(text.Where(char.IsAsciiDigit).ToArray());
+        return long.TryParse(digits, NumberStyles.None, CultureInfo.InvariantCulture, out value);
     }
 
     private async Task<bool> IsVictoryAsync(CancellationToken ct)
@@ -96,5 +126,11 @@ public sealed class SolsticeClashBet(IBotApi botApi) : IBotTask
     {
         var point = await botApi.WaitForTemplateAsync(template, ct);
         await botApi.TapAsync(point, ct);
+    }
+
+    private enum BetSide
+    {
+        Blue,
+        Red
     }
 }

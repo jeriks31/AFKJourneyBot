@@ -159,6 +159,12 @@ public sealed class BotApi : IBotApi
         return await _ocr.ReadTextAsync(screen, roi, ct);
     }
 
+    public async Task<string> ReadNumberAsync(ScreenRect roi, CancellationToken ct)
+    {
+        var screen = await CaptureScreenAsync(ct);
+        return await _ocr.ReadNumberAsync(screen, roi, ct);
+    }
+
     public async Task<RgbColor> GetPixelAsync(ScreenPoint point, CancellationToken ct)
     {
         var screen = await CaptureScreenAsync(ct);

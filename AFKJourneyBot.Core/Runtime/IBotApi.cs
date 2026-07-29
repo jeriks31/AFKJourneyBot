@@ -47,6 +47,10 @@ public interface IBotApi
     /// </summary>
     Task<string> ReadTextAsync(ScreenRect roi, CancellationToken ct);
     /// <summary>
+    /// Reads numeric OCR text from a rectangular region of the screen.
+    /// </summary>
+    Task<string> ReadNumberAsync(ScreenRect roi, CancellationToken ct);
+    /// <summary>
     /// Gets the RGB color of a pixel.
     /// </summary>
     Task<RgbColor> GetPixelAsync(ScreenPoint point, CancellationToken ct);

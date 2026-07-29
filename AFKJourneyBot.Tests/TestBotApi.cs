@@ -55,6 +55,11 @@ public sealed class TestBotApi : IBotApi
         return Task.FromResult("");
     }
 
+    public Task<string> ReadNumberAsync(ScreenRect roi, CancellationToken ct)
+    {
+        return Task.FromResult("");
+    }
+
     public Task<RgbColor> GetPixelAsync(ScreenPoint point, CancellationToken ct)
     {
         return Task.FromResult(new RgbColor(0, 0, 0));
