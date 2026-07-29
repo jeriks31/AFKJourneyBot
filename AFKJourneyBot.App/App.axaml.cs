@@ -50,7 +50,6 @@ public sealed partial class App : Application
         try
         {
             Log.Debug("Preparing runtime services...");
-            await Task.Delay(2000); //simulate platform-tools download time
             var runtime = await Task.Run(CreateRuntime);
             _ocr = runtime.Ocr;
             viewModel.CompleteStartup(runtime.TaskManager, runtime.Tasks);
