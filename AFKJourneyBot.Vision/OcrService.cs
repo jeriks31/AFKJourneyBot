@@ -14,7 +14,6 @@ public sealed class TesseractOcrService : IOcrService, IDisposable
 {
     private readonly TesseractEngine _engine;
     private readonly SemaphoreSlim _engineLock = new(1, 1);
-    private long _debugCaptureSequence;
 
     public TesseractOcrService(string? tessdataPath = null, string language = "eng")
     {
@@ -61,8 +60,6 @@ public sealed class TesseractOcrService : IOcrService, IDisposable
         Cv2.BitwiseNot(thresh, inverted);
 
         Cv2.ImEncode(".png", inverted, out var pngBytes);
-        Cv2.ImEncode(".png", cropped, out var croppedPngBytes);
-        await SaveDebugImagesAsync(screen, roi, croppedPngBytes, pngBytes, ct);
         using var pix = Pix.LoadFromMemory(pngBytes);
 
         await _engineLock.WaitAsync(ct);
@@ -73,7 +70,9 @@ public sealed class TesseractOcrService : IOcrService, IDisposable
                 _engine.SetVariable("tessedit_char_whitelist", "0123456789");
             }
 
-            using var page = _engine.Process(pix, PageSegMode.SingleLine);
+            using var page = numbersOnly
+                ? _engine.Process(pix, PageSegMode.SingleLine)
+                : _engine.Process(pix);
             return page.GetText()?.Trim() ?? string.Empty;
         }
         finally
@@ -85,35 +84,6 @@ public sealed class TesseractOcrService : IOcrService, IDisposable
 
             _engineLock.Release();
         }
-    }
-
-    private async Task SaveDebugImagesAsync(
-        ScreenFrame screen,
-        ScreenRect roi,
-        byte[] croppedPngBytes,
-        byte[] thresholdPngBytes,
-        CancellationToken ct)
-    {
-        var folder = Path.Combine(AppContext.BaseDirectory, "ocr_debug_screenshots");
-        Directory.CreateDirectory(folder);
-
-        var sequence = Interlocked.Increment(ref _debugCaptureSequence);
-        var timestamp = screen.CapturedAtUtc.ToString("yyyyMMdd_HHmmss_fff");
-        var baseName = $"{timestamp}_{sequence:D4}_{roi.X}_{roi.Y}_{roi.Width}x{roi.Height}";
-
-        await Task.WhenAll(
-            File.WriteAllBytesAsync(
-                Path.Combine(folder, $"{baseName}_screen.png"),
-                screen.PngBytes,
-                ct),
-            File.WriteAllBytesAsync(
-                Path.Combine(folder, $"{baseName}_roi.png"),
-                croppedPngBytes,
-                ct),
-            File.WriteAllBytesAsync(
-                Path.Combine(folder, $"{baseName}_threshold.png"),
-                thresholdPngBytes,
-                ct));
     }
 
     public void Dispose()

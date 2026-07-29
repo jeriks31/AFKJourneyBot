@@ -108,11 +108,8 @@ public sealed class SolsticeClashBet(IBotApi botApi) : IBotTask
         return BetSide.Red;
     }
 
-    private static bool TryParseNumber(string text, out long value)
-    {
-        var digits = new string(text.Where(char.IsAsciiDigit).ToArray());
-        return long.TryParse(digits, NumberStyles.None, CultureInfo.InvariantCulture, out value);
-    }
+    private static bool TryParseNumber(string text, out long value) =>
+        long.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out value);
 
     private async Task<bool> IsVictoryAsync(CancellationToken ct)
     {

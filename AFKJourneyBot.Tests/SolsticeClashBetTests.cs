@@ -78,8 +78,8 @@ public sealed class SolsticeClashBetTests
         var api = new ScriptedBotApi(
             CycleTemplates,
             cts,
-            blueMmrTexts: ["5000"],
-            redMmrTexts: ["4000"]);
+            blueMmrText: "5000",
+            redMmrText: "4000");
         var task = new SolsticeClashBet(api);
 
         var logEvents = await RunWithCapturedLogsAsync(task, cts.Token);
@@ -109,8 +109,8 @@ public sealed class SolsticeClashBetTests
         var api = new ScriptedBotApi(
             CycleTemplates,
             cts,
-            blueMmrTexts: ["4500"],
-            redMmrTexts: ["4500"]);
+            blueMmrText: "4500",
+            redMmrText: "4500");
         var task = new SolsticeClashBet(api);
 
         await task.RunAsync(cts.Token);
@@ -125,8 +125,8 @@ public sealed class SolsticeClashBetTests
         var api = new ScriptedBotApi(
             CycleTemplates,
             cts,
-            blueMmrTexts: [""],
-            redMmrTexts: ["4000"]);
+            blueMmrText: "50 00",
+            redMmrText: "4000");
         var task = new SolsticeClashBet(api);
 
         var logEvents = await RunWithCapturedLogsAsync(task, cts.Token);
@@ -193,15 +193,13 @@ public sealed class SolsticeClashBetTests
         CancellationTokenSource cancellationSource,
         string tokenBalanceText = "35083",
         IEnumerable<string>? postBetStates = null,
-        IEnumerable<string>? blueMmrTexts = null,
-        IEnumerable<string>? redMmrTexts = null) : IBotApi
+        string blueMmrText = "4423",
+        string redMmrText = "4445") : IBotApi
     {
         private readonly Dictionary<ScreenPoint, string> _templatesByPoint = expectedTemplates
             .Select((template, index) => (Template: template, Point: new ScreenPoint(index + 1, index + 1)))
             .ToDictionary(item => item.Point, item => item.Template);
         private readonly Queue<string> _postBetStates = new(postBetStates ?? ["resultBack"]);
-        private readonly Queue<string> _blueMmrTexts = new(blueMmrTexts ?? ["4423"]);
-        private readonly Queue<string> _redMmrTexts = new(redMmrTexts ?? ["4445"]);
         private int _nextTemplate;
 
         public List<string> FindCalls { get; } = [];
@@ -294,12 +292,12 @@ public sealed class SolsticeClashBetTests
 
             if (roi == BlueMmrRegion)
             {
-                return Task.FromResult(NextOcrText(_blueMmrTexts));
+                return Task.FromResult(blueMmrText);
             }
 
             if (roi == RedMmrRegion)
             {
-                return Task.FromResult(NextOcrText(_redMmrTexts));
+                return Task.FromResult(redMmrText);
             }
 
             throw new InvalidOperationException($"Unexpected OCR region {roi}.");
@@ -311,9 +309,6 @@ public sealed class SolsticeClashBetTests
             ObservedTokens.Add(ct);
             return Task.FromResult(new RgbColor(200, 120, 40));
         }
-
-        private static string NextOcrText(Queue<string> values) =>
-            values.Count > 1 ? values.Dequeue() : values.Peek();
     }
 
     private static async Task<IReadOnlyList<LogEvent>> RunWithCapturedLogsAsync(
