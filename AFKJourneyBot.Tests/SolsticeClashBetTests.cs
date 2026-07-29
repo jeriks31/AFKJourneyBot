@@ -66,7 +66,7 @@ public sealed class SolsticeClashBetTests
                 "resultBack",
                 "mainView"
             ]));
-            Assert.That(postBetWait.Timeout, Is.EqualTo(TimeSpan.FromMinutes(3)));
+            Assert.That(postBetWait.Timeout, Is.EqualTo(TimeSpan.FromMinutes(5)));
             Assert.That(postBetWait.PollInterval, Is.EqualTo(TimeSpan.FromSeconds(2)));
         });
     }

@@ -21,7 +21,7 @@ public sealed class SolsticeClashBet(IBotApi botApi) : IBotTask
     private const string RedAllInTemplate = "solstice_clash/red_all_in.png";
     private const string ResultBackTemplate = "solstice_clash/result_back.png";
     private const string MainViewTemplate = "battle_modes.png";
-    private static readonly TimeSpan ResultWaitTimeout = TimeSpan.FromMinutes(3);
+    private static readonly TimeSpan ResultWaitTimeout = TimeSpan.FromMinutes(5);
     private static readonly TimeSpan ResultPollInterval = TimeSpan.FromSeconds(2);
 
     public const string TaskName = "Solstice Clash Bet";
