@@ -117,7 +117,8 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         LogStore.DispatchToUiThread(() =>
         {
             IsReady = false;
-            LogStore.Add(new LogEntry("Error", $"Startup failed: {startupException.Message}"));
+            var exception = startupException.GetBaseException();
+            LogStore.Add(new LogEntry("Error", $"Startup failed: {exception.Message}"));
         });
     }
 

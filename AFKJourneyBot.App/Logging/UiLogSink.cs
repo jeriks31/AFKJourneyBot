@@ -30,7 +30,8 @@ public sealed class UiLogSink : ILogEventSink
 
         if (logEvent.Exception != null)
         {
-            line += $" | {logEvent.Exception.GetType().Name}: {logEvent.Exception.Message}";
+            var exception = logEvent.Exception.GetBaseException();
+            line += $" | {exception.GetType().Name}: {exception.Message}";
         }
 
         LogStore.Add(new LogEntry(logEvent.Level.ToString(), line));
