@@ -43,4 +43,26 @@
     <AvaloniaResource Include="Assets\app.ico" />
   </ItemGroup>
 
+  <Target Name="KeepTesseractAssemblyOutsideSingleFile"
+          BeforeTargets="GenerateSingleFileBundle"
+          Condition="'$(PublishSingleFile)' == 'true'">
+    <ItemGroup>
+      <TesseractAssembly Include="@(FilesToBundle)"
+                         Condition="'%(FilesToBundle.Filename)%(FilesToBundle.Extension)' == 'Tesseract.dll'" />
+      <FilesToBundle Remove="@(TesseractAssembly)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="FinalizeWindowsSingleFilePublish"
+          AfterTargets="Publish"
+          Condition="'$(PublishSingleFile)' == 'true' and '$(RuntimeIdentifier)' == 'win-x64'">
+    <ItemGroup>
+      <PublishedSymbols Include="$(PublishDir)**\*.pdb" />
+    </ItemGroup>
+    <Copy SourceFiles="@(TesseractAssembly)"
+          DestinationFolder="$(PublishDir)" />
+    <Delete Files="@(PublishedSymbols)" />
+    <RemoveDir Directories="$(PublishDir)x86" />
+  </Target>
+
 </Project>
